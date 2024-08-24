@@ -4,15 +4,19 @@ from render.components.project import Projector
 from render.components.geometry import PlanarMeshRepresentation, PlanarEdgesRepresentation, PlanarCoordinateSystemRepresentation
 from compose.components.representation.mesh import Geometry, Topology
 from compose.components.bind import PartRepresentation
-from numpy.typing import NDArray
-from numpy import array, min, max, zeros
-from util.color import RGBA
+from numpy import ndarray
 
 class ColorTable:
     ...
 
 class VirtualRenderer:
     def __init__(self, scene: VirtualScene) -> None:
+        """
+        Create a renderer object
+
+        Parameters:
+            scene ( VirtualScene ): the renderer is created by passing a scene
+        """
         self._scene: VirtualScene = scene
         self._projector: Projector = Projector( scene.camera )
         self._facets: PlanarMeshRepresentation | None = None
@@ -21,20 +25,41 @@ class VirtualRenderer:
 
     @property
     def scene( self ) -> VirtualScene:
+        """
+        Get the scene within the renderer
+
+        Returns:
+            VirtualScene: the internal scene
+        """
         return self._scene
 
-    def selectCamera( self, cameraId: int ) -> None:
-        self._scene.setCurrentCamera( cameraId )
+    def render( self, colorTable: Optional[ ColorTable ] = None ) -> None:
+        """
+        Render the part using the camera, the part itself and its surounding lights
 
-    def render( self, colorTable: Optional[ ColorTable ] = None ): 
+        Parameters:
+            colorTable ( Optional[ ColorTable ] = None ): color table ( not implemented yet )
+        """
         self._facets = self._projector.projectFacets( self._scene.part )
         self._facets.sorted = self._projector.determineVisibleFaces( self._scene.part )
         self._facets.colors = self._projector.determineFaceColors( self._scene.part, self._scene._lights, colorTable )
         self._edges = self._projector.projectCurvesAndEdges( self._scene.part )
         self._coordinatesystem = self._projector.getCoordinateSystem()
     
-    def boundingBox( self ) -> NDArray:
+    def boundingBox( self ) -> ndarray:
+        """
+        Get the bounding box of the 2D mesh
+
+        Returns:
+            ndarray: bounding box as ( 2 x 3 ) numpy array
+        """
         return self._facets.boundingBox()
     
     def system( self ) -> PlanarCoordinateSystemRepresentation:
+        """
+        Get the coordinate system representation
+
+        Returns:
+            PlanarCoordinateSystemRepresentation: 2D coordinate system
+        """
         return self._coordinatesystem
