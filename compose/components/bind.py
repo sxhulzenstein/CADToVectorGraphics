@@ -88,15 +88,18 @@ class SolidRepresentation:
 
 
 class PartRepresentation:
-    def __init__( self, model: CADModel ) -> None:
+    def __init__( self, model: CADModel | str ) -> None:
         """
         Create an instance of a part representation
 
         Parameters:
             model ( CADModel ): the CAD-object for which a mesh representation should be generated
         """
-        self._model: CADModel = model
-        self._solids: list[ SolidRepresentation ] = [ SolidRepresentation( solid ) for solid in model.base.val().Solids() ]
+        if type( model ) is str:
+            self._model = CADModel( model )
+        else:
+            self._model: CADModel = model
+        self._solids: list[ SolidRepresentation ] = [ SolidRepresentation( solid ) for solid in self._model.base.val().Solids() ]
         
     def _assertIsValidIndex( self, index ) -> None:
         if index > len( self._solids ) - 1:

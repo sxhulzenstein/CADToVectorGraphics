@@ -2,9 +2,11 @@ from render.render import VirtualRenderer
 from render.components.geometry import PlanarEdgesRepresentation, PlanarMeshRepresentation, PlanarFacet, EdgeRepresentationType
 from numpy import ndarray
 from illustrate.components.style import LineStyle, FaceStyle, CoordSystemStyle, ArrowStyle
-from numpy import array, any, isnan
+from numpy import array, any, isnan, stack, transpose, zeros
 from numpy.linalg import norm
 from util.geometry import normalize
+from util.color import RGBA
+from illustrate.components.svg import SVGElement, SVGHelper, CreatefontClass
 
 class Image:
     def __init__( self, renderer: VirtualRenderer ) -> None:
@@ -82,41 +84,33 @@ class SVG( Image ):
     def __init__( self, renderer: VirtualRenderer ) -> None:
         super().__init__( renderer )
 
-    def _writeFacet( self, facet: PlanarFacet ) -> str:
+    def _writeFacet( self, facet: PlanarFacet ) -> SVGElement:
         width = 0.03
-        dash = ""
-        strokecolor = str( facet.color )
+        dash = (1 , 0 )
+        strokecolor = facet.color
         if not self._faceStyle is None:
             width = self._faceStyle.width
             strokecolor = str( self._faceStyle.color )
             if not self._faceStyle.dash is None:
-                dash += "stroke-dasharray=\""
-                dash += ', '.join( str( v ) for v in self._faceStyle.dash ) +"\""
+                dash = self._faceStyle.dash
+        
+        return SVGHelper.Polygon( facet.points, facet.color, strokecolor, width, dash )
 
-        """< polygon points = "50,200 250,200 150,50" fill = "url(#gradient2)" / >"""
-        x, y = list( facet.points[ 0, : ] ), list( facet.points[ 1, : ] )
-        output = f"<polygon points=\""
-        output += " ".join( f"{ xi },{ yi }" for xi, yi in zip( x, y ) )
-        output += f"""" fill="rgb{ str( facet.color ) }" stroke="rgb{ strokecolor }" stroke-width="{width}" stroke-linejoin="round" {dash} fill-opacity="{facet.color.alpha / 255}" />\n"""
-        return output
 
     def _writeSurface(self) -> list[ str ]:
-        surfaces = [ "<g>" ]
+        surface = SVGHelper.TransformGroup( (1,1), (0,0) )
         for facet in self._renderer._facets:
-            surfaces.append( self._writeFacet( facet ) )
-        surfaces.append( "</g>\n" )
-        return surfaces
+             surface.append( self._writeFacet( facet ) )
+        return surface
 
-    def _writeWires( self, edges: PlanarEdgesRepresentation ) -> list[ str ]:
-        wires: list[ str ] = []
+    def _writeWires( self, edges: PlanarEdgesRepresentation ) -> list[ SVGElement ]:
+        elements = []
         for edge in edges._wires:
-            x, y = list( edge.points[ 0, : ] ), list( edge.points[ 1, : ] )
-            wires.append(f"<path d=\"M{ x[ 0 ] },{ y[ 0 ] } ")
-            wires.append(" ".join(f"L{ xi },{ yi }" for xi, yi in zip( x[ 1: ], y[ 1: ] ) ))
-            wires.append(" \" />\n")
-        return wires
+            elements.append( SVGHelper.Path( edge.points ) )
+        return elements
 
-    def _writeWiresCollection( self ) -> list[ str ]:
+
+    def _writeWiresCollection( self ) -> list[ SVGElement ]:
 
         hierarchy: list = [
             EdgeRepresentationType.HIDDENSMOOTHWIRE,
@@ -125,10 +119,10 @@ class SVG( Image ):
             EdgeRepresentationType.VISIBLESHARPWIRE,
             EdgeRepresentationType.VISIBLEOUTLINE
         ]
-
-        wireStrings: list[ str ] = []
+        groups = []
 
         for edgeGroup in hierarchy:
+            
             edges: PlanarEdgesRepresentation | None = next( ( visibleEdges for visibleEdges in self._renderer._edges if visibleEdges._type == edgeGroup ), None )
             if edges is None:
                 continue
@@ -136,44 +130,38 @@ class SVG( Image ):
             linestyle: LineStyle | None = next( ( style for style in self._lineStyles if style.type == edgeGroup ), None )
             if linestyle is None:
                 continue
-            
-            dash = ""
             if not linestyle.dash is None:
-                dash += "stroke-dasharray=\""
-                dash += ', '.join( str( v ) for v in linestyle.dash ) +"\""
+                group = SVGHelper.StyleGroup( linestyle.color, linestyle.width, linestyle.dash )
+            else:
+                group = SVGHelper.StyleGroup( linestyle.color, linestyle.width )
 
-            wireStrings.append( f"""<g stroke="rgb{ str( linestyle.color ) }" stroke-width="{ linestyle.width }" stroke-opacity="{ linestyle.color.alpha / 255 }" {dash} fill="none" stroke-linejoin="round" stroke-linecap="round">""" )
-            wireStrings.extend( self._writeWires( edges ) )
-            wireStrings.append( """</g>\n""" )
-        return wireStrings
+            group.extend( self._writeWires( edges ) )
+            groups.append( group )
+        return groups
+        
     
-    def _writeArrow( self, p0: ndarray, p1: ndarray, style: ArrowStyle, unitLength: float) -> str:
-        result = []
+    def _writeArrow( self, p0: ndarray, p1: ndarray, style: ArrowStyle, unitLength: float) -> SVGElement:
         actualLength: float = norm( p1- p0 )
         adjustedArrowHeadLength = style.length * actualLength / unitLength
         n01: ndarray = normalize( p1 - p0 ).flatten()
         n01Ortho: ndarray = n01[ array( ( 1, 0 ) ) ] * array( ( 1, - 1 ) )
-
+        p2 = p0 + ( actualLength + 1 ) * n01
         q0 = p1 - adjustedArrowHeadLength * n01 - n01Ortho * style.width / 2
         q1 = p1 - adjustedArrowHeadLength * n01 + n01Ortho * style.width / 2
-        result.append(
-            f"""<line x1="{ p0[ 0 ] }" y1="{ p0[ 1 ] }" x2="{ p1[ 0 ] }" y2="{ p1[ 1 ] }" stroke="red" stroke-width="{ 0.1 }" stroke-linecap="round" />\n""")
-        
-        result.append(f""""<polygon points="{p1[ 0 ]},{p1[ 1 ]} { q0[ 0 ] },{ q0[ 1 ] } {q1[ 0 ]},{q1[ 1 ]}" fill="red" stroke="red" stroke-width="{0.1}" stroke-linejoin="round" />\n""")
-        
-        p2 = p0 + ( actualLength + 1 ) * n01
-        text = "x"
-        result.append( f"""<g transform="scale({ 1 }, { - 1 })   translate({ p2[ 0 ] },{ - p2[ 1 ] } )">\n""" )
-        result.append( f"""<text x="0" y="0" class="smallItalic">{text}</text>\n""" )
-        result.append("</g>")
 
-        return ''.join(result)
+        group = SVGHelper.TransformGroup( ( 1, 1 ),  ( 0, 0 ) )
+        group.append( SVGHelper.Line( p0, p1, RGBA( 255, 0, 0 ), 0.1 ) )
+        group.append( SVGHelper.Polygon( transpose( stack( ( p1, q0, q1 ) ) ), RGBA( 255, 0, 0  ), RGBA( 255, 0, 0  ), 0.1 ) )
+        labelGroup = SVGHelper.TransformGroup( ( 1, -1 ),  (  p2[ 0 ],  - p2[ 1 ] ) )
 
+        labelGroup.append( SVGHelper.Text( zeros( 2 ), "x", "smallItalic" ) )
+        group.append( labelGroup )
 
+        return group
 
-    def _writeCoordinateSystem( self ) -> list[ str ]:
+    def _writeCoordinateSystem( self ) -> SVGElement | None:
         if self._coordStyle is None:
-            return []
+            return None
         
         sizefactor = self._coordStyle.size / 2
         anchor = self._renderer._coordinatesystem.anchor
@@ -181,43 +169,40 @@ class SVG( Image ):
         y = self._renderer._coordinatesystem.y * sizefactor
         z = self._renderer._coordinatesystem.z * sizefactor
 
-        vectors: list[ str ] = [ "<g>\n" ]
+        group = SVGHelper.TransformGroup( ( 1, 1 ), ( 0, 0 ) )
+
         if not any( isnan( x ) ):
-            vectors.append( self._writeArrow( anchor, anchor + x, self._coordStyle.arrowStyle, sizefactor ) )
+            group.append( self._writeArrow( anchor, anchor + x, self._coordStyle.arrowStyle, sizefactor ) )
         
         if not any( isnan( y ) ):
-            vectors.append( self._writeArrow( anchor, anchor + y, self._coordStyle.arrowStyle, sizefactor ) )
+            group.append( self._writeArrow( anchor, anchor + y, self._coordStyle.arrowStyle, sizefactor ) )
         
         if not any( isnan( z ) ):
-            vectors.append( self._writeArrow( anchor, anchor + z, self._coordStyle.arrowStyle, sizefactor ) )
-        vectors.append("</g>\n")
-        return vectors
+            group.append( self._writeArrow( anchor, anchor + z, self._coordStyle.arrowStyle, sizefactor ) )
+
+        return group
+
     
     def _writeStyles( self ) -> str:
-        return """<style> .smallItalic { font: italic 4px serif; fill: red; } </style>"""
+        style = SVGHelper.Style()
+        style.append( CreatefontClass( "smallItalic", 6, RGBA( 255, 0, 0 ) ) )
+        return style
 
-    def _write( self, facets: PlanarMeshRepresentation, edges: list[ PlanarEdgesRepresentation ] ) -> str:
-        # add version and encoding
-        entries = ["""<?xml version="1.0" encoding="UTF-8" standalone="no"?>\n"""]
-
-        dx = self.translate[ 0 ]
-        dy = self.translate[ 1 ]
-        
-        # add width and height
-        entries.append( f"""<svg xmlns:svg="http://www.w3.org/2000/svg" xmlns="http://www.w3.org/2000/svg" width="{ self.width }" height="{ self.height }">\n""" )
-        entries.append( f"""<g transform="scale({ self._zoom[ 0 ] }, { - self._zoom[ 1 ] })   translate({ dx },{ dy } )">\n""" )
-        entries.append( self._writeStyles() )
-        entries.extend( self._writeSurface() )
-        entries.extend( self._writeWiresCollection() )
-        entries.extend( self._writeCoordinateSystem() )
-        entries.append( "</g>" )
-        entries.append( "</svg>" )
-        return ''.join(entries)
-
-    def write( self, name: str, directory: str ) -> None:
+    def _write( self ) -> str:
+        svg = SVGHelper.SVG( self.width, self.height )
+        group = SVGHelper.TransformGroup( ( self._zoom[ 0 ], - self._zoom[ 1 ] ), self.translate )
+        group.append( self._writeStyles() )
+        group.append( self._writeSurface() )
+        group.extend( self._writeWiresCollection() )
+        group.append( self._writeCoordinateSystem() )
+        svg.append( group )
+        return str( svg )
+    
+    def write( self, directory: str ) -> None:
+        name = self._renderer.scene.part.model.name
         filepath = f"{ directory }/{ name }.svg"
         f = open( filepath, "w" )
-        svg: str = self._write( self._renderer._facets, self._renderer._edges )
+        svg: str = self._write( )
         f.write( svg )
         f.close()
 
