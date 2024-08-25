@@ -71,7 +71,7 @@ exporters.export( box, "model.step" )
 
 # importing the file to a CAD-model representation
 part = PartRepresentation( "model.step" )
-part.color( 0, ( 255, 0, 0 ) )
+part.color( 0, ( 100, 200, 100 ) )
 
 # creating a mesh from the CAD-file
 part.tessellateAll( size = MeshSize.GRAINY )
@@ -83,8 +83,8 @@ scene.setCameraPosition( position = ( 15, 15, 15 ) )
 # adding a light source
 # multiple lights can be added
 # if none is added, the object will be displayed with the given base color
-lightSource = LightSource( position = ( - 15, 15, 20 ) )
-lightSource.color = ( 255, 255, 255 )
+lightSource = LightSource( position = ( 20, 10, 0 ) )
+lightSource.color = ( 150, 50, 255 )
 scene.appendLightSource( light = lightSource )
 
 # adding the scene with all components to a renderer
@@ -128,3 +128,7 @@ image.setCoordSystemStyle( coordStyle )
 # export the image as svg
 image.write()
 ```
+This script has the following output then. It may be said that this an png image so that it can be seen here.
+![model](https://github.com/user-attachments/assets/b09f3b13-0691-451b-ac8a-78d8435ff034)
+
+![model](https://github.com/user-attachments/assets/e6f8096e-c8d4-4279-9018-31ec5d812398)
