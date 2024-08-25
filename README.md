@@ -1,4 +1,6 @@
-# CADVectorGraphics - Converting CAD files to beautiful scalable vector graphics
+![text](https://github.com/user-attachments/assets/be9573e3-ace3-4fa9-aa16-111a16a2170c)
+
+# Converting CAD-files to beautiful Scalable Vector Graphics
 
 ## Motivation
 Have you ever gotten annoyed by MS Word minimizing the resolution of your images? Did you ever feel the frustration of losing the fine details in your illustrations in just a few pixels? - Then you are in the right place! 
@@ -47,8 +49,10 @@ pip install numpy==1.26 --upgrade
 ```
 
 ### SVG not really working for MS office applications
-A scalable vector graphic might not be the best choice for the use in MS office applications. A better option would be to use the Enhanced Meta File (EMF). However it's quite easy to convert an SVG to an EMF file using Inkscape. You can either open the SVG in Inkscape directly and save it as a new file with the suitable extension.
-![Screenshot 2024-08-26 000944](https://github.com/user-attachments/assets/6e5edcab-25da-4253-a73b-3e8352b63208)
+A scalable vector graphic might not be the best choice for the use in MS office applications. A better option would be to use the Enhanced Meta File (EMF). However it's quite easy to convert an SVG to an EMF file using Inkscape. You can either open the SVG in Inkscape directly and save it as a new file with the suitable extension.   
+
+![Screenshot 2024-08-26 001509](https://github.com/user-attachments/assets/78759fe1-4c3f-46bd-9cb7-3c973e684ed4)
+
 The other method is to use Inksckape from the command line.
 ```bat
 cd [DIR_TO_MY_FILE]
@@ -129,6 +133,7 @@ image.setCoordSystemStyle( coordStyle )
 # export the image as svg
 image.write()
 ```
-This script has the following output then.
+This script has the following output then.   
+
 ![model](https://github.com/user-attachments/assets/aa6a991a-92cc-470f-bacb-3266e1cf7dba)
 
