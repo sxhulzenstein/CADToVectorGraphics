@@ -18,33 +18,34 @@ class Image:
         self._boundingBox: ndarray = self._renderer.boundingBox()
         self._size: tuple[ int, int ] = self._boundingBox[ 0, 2 ], self._boundingBox[ 1, 2 ]
         self._zoom: tuple[ float, float ] = ( 1., 1.)
+        self._scale: tuple[ float, float ] = ( 1, 1 )
     
     @property
     def lineStyle( self ) -> list[ LineStyle ]:
         return self._lineStyles
 
     @property
-    def dimensions( self ) -> tuple[ int, int ]:
-        dx = int( ( self._size[ 0 ] + self._margin[ 0 ] * 2 ) * self._zoom[ 0 ] )
-        dy = int( ( self._size[ 1 ] + self._margin[ 1 ] * 2 ) * self._zoom[ 1 ] )
+    def size( self ) -> tuple[ int, int ]:
+        dx = int( self._boundingBox[ 0, 2 ] * self._zoom[ 0 ] ) + self._margin[ 0 ] * 2
+        dy = int( self._boundingBox[ 1, 2 ] * self._zoom[ 1 ] ) + self._margin[ 1 ] * 2
 
         if self._coordStyle is not None:
-            dx += self._coordStyle.size  * self._zoom[ 0 ]
-            dy += self._coordStyle.size  * self._zoom[ 1 ]
+            dx += self._coordStyle.margin * 2
+            dy += self._coordStyle.margin * 2
 
         return dx, dy
 
     @property
     def width( self ) -> int:
-        return self.dimensions[ 0 ]
+        return self.size[ 0 ] * self._scale[ 0 ]
     
     @property
     def height( self ) -> int:
-        return self.dimensions[ 1 ]
+        return self.size[ 1 ] * self._scale[ 1 ]
 
     @property
     def margins( self ) -> tuple[ int, int ]:
-        return self.margins
+        return self._margin
 
     @margins.setter
     def margins( self, margins: tuple[ int, int ] ) -> None:
@@ -59,17 +60,26 @@ class Image:
         self._zoom = zoom
 
     @property
-    def translate( self ) -> tuple[ int, int ]:
-        dx = - self._boundingBox[ 0, 0 ] + self._margin[ 0 ]
-        dy = - self._boundingBox[ 1, 1 ] - self._margin[ 1 ]
+    def scale( self ) -> tuple[ float, float ]:
+        return self._scale
+    
+    @scale.setter
+    def scale( self, scale: tuple[ float, float ] ) -> None:
+        self._scale = scale
 
-        if not self._coordStyle is None:
-            dx += self._coordStyle.size
-            self._renderer._coordinatesystem.anchor = array( 
-                ( self._boundingBox[ 0, 0 ] - self._coordStyle.size + self._margin[ 0 ] / 2, self._boundingBox[ 1, 0 ] - self._coordStyle.size + self._margin[ 1 ] / 2 )  )
+    @property
+    def translate( self ) -> tuple[ int, int ]:
+        dx = - self._boundingBox[ 0, 0 ]
+        dy = - self._boundingBox[ 1, 1 ]
 
         return dx, dy
     
+    def boundingBox( self ) -> ndarray:
+        bb = self._boundingBox
+        bb[ 0, :] *= self._zoom[ 0 ]
+        bb[ 1, :] *= self._zoom[ 1 ]
+        return bb
+
     def addLineStyle( self, linestyle: LineStyle ) -> None:
         self._lineStyles.append( linestyle )
 
@@ -93,7 +103,7 @@ class Image:
 
 
     def _writeSurface(self) -> list[ str ]:
-        surface = SVGHelper.TransformGroup( (1,1), (0,0) )
+        surface = SVGHelper.TransformGroup( ( 1, 1 ), ( 0, 0 ) )
         for facet in self._renderer._facets:
              surface.append( self._writeFacet( facet ) )
         return surface
@@ -133,33 +143,13 @@ class Image:
             group.extend( self._writeWires( edges ) )
             groups.append( group )
         return groups
-        
-    
-    def _writeArrow( self, p0: ndarray, p1: ndarray, style: ArrowStyle, unitLength: float) -> SVGElement:
-        actualLength: float = norm( p1- p0 )
-        adjustedArrowHeadLength = style.length * actualLength / unitLength
-        n01: ndarray = normalize( p1 - p0 ).flatten()
-        n01Ortho: ndarray = n01[ array( ( 1, 0 ) ) ] * array( ( 1, - 1 ) )
-        p2 = p0 + ( actualLength + 1 ) * n01
-        q0 = p1 - adjustedArrowHeadLength * n01 - n01Ortho * style.width / 2
-        q1 = p1 - adjustedArrowHeadLength * n01 + n01Ortho * style.width / 2
-
-        group = SVGHelper.TransformGroup( ( 1, 1 ),  ( 0, 0 ) )
-        group.append( SVGHelper.Line( p0, p1, RGBA( 255, 0, 0 ), 0.1 ) )
-        group.append( SVGHelper.Polygon( transpose( stack( ( p1, q0, q1 ) ) ), RGBA( 255, 0, 0  ), RGBA( 255, 0, 0  ), 0.1 ) )
-        labelGroup = SVGHelper.TransformGroup( ( 1, -1 ),  (  p2[ 0 ],  - p2[ 1 ] ) )
-
-        labelGroup.append( SVGHelper.Text( zeros( 2 ), "x", "smallItalic" ) )
-        group.append( labelGroup )
-
-        return group
 
     def _writeCoordinateSystem( self ) -> SVGElement | None:
         if self._coordStyle is None:
             return None
         
         sizefactor = self._coordStyle.size / 2
-        anchor = self._renderer._coordinatesystem.anchor
+        anchor = array( [ self._coordStyle.size, self.height - self._coordStyle.size ] )
         x = self._renderer._coordinatesystem.x * sizefactor
         y = self._renderer._coordinatesystem.y * sizefactor
         z = self._renderer._coordinatesystem.z * sizefactor
@@ -167,37 +157,38 @@ class Image:
         group = SVGHelper.TransformGroup( ( 1, 1 ), ( 0, 0 ) )
 
         if not any( isnan( x ) ):
-            group.append( self._writeArrow( anchor, anchor + x, self._coordStyle.arrowStyle, sizefactor ) )
+            group.append( SVGHelper.Arrow( anchor, anchor + x * array( ( 1, -1 ) ), sizefactor, self._coordStyle.x ) )
         
         if not any( isnan( y ) ):
-            group.append( self._writeArrow( anchor, anchor + y, self._coordStyle.arrowStyle, sizefactor ) )
+            group.append( SVGHelper.Arrow( anchor, anchor + y * array( ( 1, -1 ) ), sizefactor, self._coordStyle.y ) )
         
         if not any( isnan( z ) ):
-            group.append( self._writeArrow( anchor, anchor + z, self._coordStyle.arrowStyle, sizefactor ) )
+            group.append( SVGHelper.Arrow( anchor, anchor + z * array( ( 1, -1 ) ), sizefactor, self._coordStyle.z ) )
 
         return group
 
-    
-    def _writeStyles( self ) -> str:
-        style = SVGHelper.Style()
-        style.append( CreatefontClass( "smallItalic", 6, RGBA( 255, 0, 0 ) ) )
-        return style
-
     def _write( self ) -> str:
         svg = SVGHelper.SVG( self.width, self.height )
-        group = SVGHelper.TransformGroup( ( self._zoom[ 0 ], - self._zoom[ 1 ] ), self.translate )
-        group.append( self._writeStyles() )
-        group.append( self._writeSurface() )
-        group.extend( self._writeWiresCollection() )
-        group.append( self._writeCoordinateSystem() )
-        svg.append( group )
+        coordGroup = SVGHelper.TransformGroup( self.scale, ( 0, 0 ) )
+        coordSysMargin = self._coordStyle.margin if not self._coordStyle is None else 0
+        marginGroup = SVGHelper.TransformGroup( ( 1, 1 ), ( coordSysMargin, coordSysMargin ) )
+        boundingBoxGroup = SVGHelper.TransformGroup( ( self._zoom[ 0 ], self._zoom[ 1 ] ), ( self.margins[ 0 ] / self._zoom[ 0 ], self.margins[ 1 ] / self._zoom[ 1 ] )  )
+        geomGroup = SVGHelper.TransformGroup( ( 1, - 1 ), self.translate )
+        geomGroup.append( self._writeSurface() )
+        geomGroup.extend( self._writeWiresCollection() )
+        boundingBoxGroup.append( geomGroup )
+        marginGroup.append( boundingBoxGroup )
+        coordGroup.append( marginGroup )
+
+        coordGroup.append( self._writeCoordinateSystem() )
+        svg.append( coordGroup )
         return str( svg )
     
     def write( self, directory: str ) -> None:
         name = self._renderer.scene.part.name
         filepath = f"{ directory }/{ name }.svg"
         f = open( filepath, "w" )
-        svg: str = self._write( )
+        svg: str = self._write()
         f.write( svg )
         f.close()
 
