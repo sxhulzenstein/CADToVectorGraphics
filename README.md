@@ -48,6 +48,7 @@ pip install numpy==1.26 --upgrade
 
 ### SVG not really working for MS office applications
 A scalable vector graphic might not be the best choice for the use in MS office applications. A better option would be to use the Enhanced Meta File (EMF). However it's quite easy to convert an SVG to an EMF file using Inkscape. You can either open the SVG in Inkscape directly and save it as a new file with the suitable extension.
+![Screenshot 2024-08-26 000944](https://github.com/user-attachments/assets/6e5edcab-25da-4253-a73b-3e8352b63208)
 The other method is to use Inksckape from the command line.
 ```bat
 cd [DIR_TO_MY_FILE]
@@ -128,7 +129,6 @@ image.setCoordSystemStyle( coordStyle )
 # export the image as svg
 image.write()
 ```
-This script has the following output then. It may be said that this an png image so that it can be seen here.
-![model](https://github.com/user-attachments/assets/b09f3b13-0691-451b-ac8a-78d8435ff034)
+This script has the following output then.
+![model](https://github.com/user-attachments/assets/aa6a991a-92cc-470f-bacb-3266e1cf7dba)
 
-![model](https://github.com/user-attachments/assets/e6f8096e-c8d4-4279-9018-31ec5d812398)
