@@ -1,6 +1,7 @@
-from compose.components.representation.cad import CADModel, MaterialProperties
-from compose.components.representation.mesh import MeshModel, MeshSize
-from util.color import RGBA, randomGrayColor
+from cadvectorgraphics.compose.components.representation.cad import CADModel
+from cadvectorgraphics.compose.components.representation.mesh import MeshModel, MeshSize
+from cadvectorgraphics.compose.components.representation.material import MaterialProperties
+from cadvectorgraphics.util.color import RGBA, randomGrayColor
 from cadquery.occ_impl.shapes import Solid
 
 class SolidRepresentation:
@@ -206,3 +207,13 @@ class PartRepresentation:
             raise StopIteration()
 
         return self._solids[ index ]
+    
+    @property
+    def name( self ) -> str:
+        """
+        Get the name of the part
+
+        Returns:
+            str: name
+        """
+        return self._model.name

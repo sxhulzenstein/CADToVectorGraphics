@@ -1,9 +1,7 @@
 from typing import Optional
-from compose.compose import VirtualScene
-from render.components.project import Projector
-from render.components.geometry import PlanarMeshRepresentation, PlanarEdgesRepresentation, PlanarCoordinateSystemRepresentation
-from compose.components.representation.mesh import Geometry, Topology
-from compose.components.bind import PartRepresentation
+from cadvectorgraphics.compose.compose import VirtualScene
+from cadvectorgraphics.render.components.project import Projector
+from cadvectorgraphics.render.components.geometry import PlanarMeshRepresentation, PlanarEdgesRepresentation, PlanarCoordinateSystemRepresentation
 from numpy import ndarray
 
 class ColorTable:

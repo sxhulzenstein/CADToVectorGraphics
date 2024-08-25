@@ -1,5 +1,5 @@
-from render.components.geometry import EdgeRepresentationType
-from util.color import RGBA
+from cadvectorgraphics.render.components.geometry import EdgeRepresentationType
+from cadvectorgraphics.util.color import RGBA
 
 class LineStyle:
     def __init__( self, edgeType: EdgeRepresentationType ) -> None:

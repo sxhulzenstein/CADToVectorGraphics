@@ -1,6 +1,5 @@
 from cadquery import Workplane as CADModelBase
 from cadquery import importers
-from compose.components.representation.material import MaterialProperties
 from pathlib import Path
 from uuid import uuid4
 

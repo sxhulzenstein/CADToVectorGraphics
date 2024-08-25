@@ -1,7 +1,7 @@
 from numpy.typing import NDArray
 from numpy import array, zeros, transpose, ndarray, min, max, int64
-from compose.components.representation.mesh import Geometry, Topology
-from util.color import RGBA
+from cadvectorgraphics.compose.components.representation.mesh import Geometry, Topology
+from cadvectorgraphics.util.color import RGBA
 from enum import Enum
 from cadquery.occ_impl.shapes import Edge
 from OCP.GCPnts import GCPnts_QuasiUniformDeflection as CurvePointsGenerator

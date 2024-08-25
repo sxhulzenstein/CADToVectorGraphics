@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cadvectorgraphics"
+version = "1.0.4"
+authors = [
+  { name="Dennis Schulz", email="dennisschulz2000@gmail.com" },
+]
+description = "A python package for generating beautiful SVG from CAD data"
+readme = "README.md"
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+Repository  = "https://github.com/sxhulzenstein/CADToVectorGraphics"

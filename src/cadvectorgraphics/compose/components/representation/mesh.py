@@ -1,8 +1,8 @@
 from cadquery import Vector as VectorBase
 from numpy.typing import NDArray
 from numpy import array, zeros, cross, ndarray, transpose
-from util.geometry import cNormalize
-from compose.components.representation.cad import CADModel
+from cadvectorgraphics.util.geometry import cNormalize
+from .cad import CADModel
 from cadquery import exporters
 from cadquery.occ_impl.shapes import Solid
 import uuid, tempfile, gmsh, os

@@ -1,10 +1,10 @@
-from compose.components.view import Camera
-from compose.components.representation.cad import CADModelBase
-from compose.components.bind import PartRepresentation, SolidRepresentation
-from compose.components.representation.mesh import Geometry, Topology
-from compose.components.illuminate import LightSource
-from render.components.geometry import PlanarMeshRepresentation, PlanarEdgesRepresentation, EdgeRepresentationType, PlanarCoordinateSystemRepresentation
-from util.geometry import cNormalize
+from cadvectorgraphics.compose.components.view import Camera
+from cadvectorgraphics.compose.components.representation.cad import CADModelBase
+from cadvectorgraphics.compose.components.bind import PartRepresentation, SolidRepresentation
+from cadvectorgraphics.compose.components.representation.mesh import Geometry, Topology
+from cadvectorgraphics.compose.components.illuminate import LightSource
+from cadvectorgraphics.render.components.geometry import PlanarMeshRepresentation, PlanarEdgesRepresentation, EdgeRepresentationType, PlanarCoordinateSystemRepresentation
+from cadvectorgraphics.util.geometry import cNormalize
 from OCP.HLRAlgo import HLRAlgo_Projector
 from OCP.gp import gp_Dir as OCPDirection, gp_Ax2 as OCPAxis,gp_Pnt as OCPSpacialPoint, gp_Pnt2d as OCPPlanarPoint
 from typing import Optional

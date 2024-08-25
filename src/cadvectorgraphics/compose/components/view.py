@@ -1,4 +1,4 @@
-from util.geometry import normalize
+from cadvectorgraphics.util.geometry import normalize
 from numpy import ndarray, zeros, array, reshape
 
 class Camera:

@@ -1,6 +1,6 @@
 from enum import Enum
 from numpy import ndarray
-from util.color import RGBA
+from cadvectorgraphics.util.color import RGBA
 
 class SVGElementType( Enum ):
     SVG = 1

@@ -1,12 +1,12 @@
-from render.render import VirtualRenderer
-from render.components.geometry import PlanarEdgesRepresentation, PlanarMeshRepresentation, PlanarFacet, EdgeRepresentationType
+from cadvectorgraphics.render.render import VirtualRenderer
+from cadvectorgraphics.render.components.geometry import PlanarEdgesRepresentation, PlanarFacet, EdgeRepresentationType
 from numpy import ndarray
-from illustrate.components.style import LineStyle, FaceStyle, CoordSystemStyle, ArrowStyle
+from cadvectorgraphics.illustrate.components.style import LineStyle, FaceStyle, CoordSystemStyle, ArrowStyle
 from numpy import array, any, isnan, stack, transpose, zeros
 from numpy.linalg import norm
-from util.geometry import normalize
-from util.color import RGBA
-from illustrate.components.svg import SVGElement, SVGHelper, CreatefontClass
+from cadvectorgraphics.util.geometry import normalize
+from cadvectorgraphics.util.color import RGBA
+from cadvectorgraphics.illustrate.components.svg import SVGElement, SVGHelper, CreatefontClass
 
 class Image:
     def __init__( self, renderer: VirtualRenderer ) -> None:
@@ -78,11 +78,6 @@ class Image:
 
     def setCoordSystemStyle( self, coordSystemStyle: CoordSystemStyle ) -> None:
         self._coordStyle = coordSystemStyle
-
-        
-class SVG( Image ):
-    def __init__( self, renderer: VirtualRenderer ) -> None:
-        super().__init__( renderer )
 
     def _writeFacet( self, facet: PlanarFacet ) -> SVGElement:
         width = 0.03
@@ -199,7 +194,7 @@ class SVG( Image ):
         return str( svg )
     
     def write( self, directory: str ) -> None:
-        name = self._renderer.scene.part.model.name
+        name = self._renderer.scene.part.name
         filepath = f"{ directory }/{ name }.svg"
         f = open( filepath, "w" )
         svg: str = self._write( )

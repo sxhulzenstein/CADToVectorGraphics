@@ -1,4 +1,4 @@
-from util.color import RGBA
+from cadvectorgraphics.util.color import RGBA
 from numpy import ndarray, array, reshape
 
 class LightSource:

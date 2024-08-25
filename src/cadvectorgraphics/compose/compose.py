@@ -1,6 +1,6 @@
-from compose.components.bind import PartRepresentation
-from compose.components.illuminate import LightSource
-from compose.components.view import Camera
+from cadvectorgraphics.compose.components.bind import PartRepresentation
+from cadvectorgraphics.compose.components.illuminate import LightSource
+from cadvectorgraphics.compose.components.view import Camera
 
 class VirtualScene:
     def __init__( self, part: PartRepresentation ) -> None:
