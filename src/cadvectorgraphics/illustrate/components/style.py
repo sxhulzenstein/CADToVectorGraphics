@@ -157,7 +157,7 @@ class FaceStyle:
         self._dash = dash
     
 class ArrowStyle:
-    def __init__( self, width: float, length: float ) -> None:
+    def __init__( self, strokewidth: float, color: RGBA, label: str, fontsize: float ) -> None:
         """
         Create a style description for an arrow
 
@@ -165,29 +165,105 @@ class ArrowStyle:
             width ( float ): width of the arrow head
             length ( float ): length of the arrow head
         """
-        self._width: float = width
-        self._length: float = length
-        self._label: str = ""
+        self._strokeWidth: float = strokewidth
+        self._headwidth: float = strokewidth * 3
+        self._headlength: float = strokewidth * 4
+        self._label: str = label
+        self._strokecolor: RGBA = color
+        self._fontsize: float = fontsize
     
     @property
-    def width( self ) -> float:
+    def headwidth( self ) -> float:
         """
-        Get the width of the arrow head
+        Get the width of the arrow head multiplied by stroke width
 
         Returns:
             float: width
         """
-        return self._width
+        return self._headwidth
     
     @property
-    def length( self ) -> float:
+    def headlength( self ) -> float:
         """
-        Get the length of the arrow head
+        Get the length of the arrow head multiplied by stroke width
         
         Returns:
             float: length
         """
-        return self._length
+        return self._headlength
+    
+    @headwidth.setter
+    def headwidth( self, width: float ) -> None:
+        """
+        Set the width of the arrow head prefactor for stroke width
+        
+        Parameters:
+            width ( float ): length
+        """
+        self._headwidth = width * self._headwidth
+    
+    @headlength.setter
+    def headlength( self, length ) -> None:
+        """
+        Set the length of the arrow head prefactor for stroke width
+        
+        Parameters:
+            length ( float ): length
+        """
+        self._headlength = self._strokeWidth * length 
+
+    @property
+    def label( self ) -> str:
+        """
+        Get the arrow's label
+
+        Returns:
+            str: arrow label
+        """
+        return self._label
+    
+    @property
+    def color( self ) -> RGBA:
+        """
+        Get the stroke color
+
+        Returns:
+            RGBA: stroke color
+        """
+        return self._strokecolor
+    
+    @property
+    def strokewidth( self ) -> float:
+        """
+        Get the stroke width
+
+        Returns:
+            float: stroke width
+        """
+        return self._strokeWidth
+    
+    @strokewidth.setter
+    def strokewidth( self, strokewidth: float ) -> float:
+        """
+        Set the stroke width
+
+        Parameters:
+            strokewidth ( float ): new stroke width
+        """
+        oldWidth = self._strokeWidth
+        self._headwidth *= strokewidth / oldWidth
+        self._headlength *= strokewidth / oldWidth
+        self._strokeWidth = strokewidth
+
+    @property
+    def fontSize( self ) -> float:
+        """
+        Get the font size
+
+        Returns:
+            float: font size
+        """
+        return self._fontsize
 
 
 class CoordSystemStyle:
@@ -199,39 +275,72 @@ class CoordSystemStyle:
             size ( float ): illustration size of the coord system
         """
         self._size: float = size
-        self._width: float = 1
-        self._arrow: ArrowStyle = ArrowStyle( 1 * self._width, 2 * self._width )
+        self._fontsize = size / 5
+        self._x: ArrowStyle = ArrowStyle( size / 25., RGBA( 0, 0, 0 ), "x", self._fontsize )
+        self._y: ArrowStyle = ArrowStyle( size / 25., RGBA( 0, 0, 0 ), "y", self._fontsize)
+        self._z: ArrowStyle = ArrowStyle( size / 25., RGBA( 0, 0, 0 ), "z", self._fontsize)
+        self._margin = 2 * size
     
     @property
-    def arrowStyle( self ) -> ArrowStyle:
+    def x( self ) -> ArrowStyle:
         """
-        Get the arrow style:
+        Get the style information for the x-axis
 
         Returns:
-            ArrowStyle: style description for the arrows
+            ArrowStyle: style information
         """
-        return self._arrow
+        return self._x
+    
+    @property
+    def y( self ) -> ArrowStyle:
+        """
+        Get the style information for the y-axis
 
-    @arrowStyle.setter
-    def arrowStyle( self, style: tuple[ float, float ] | ArrowStyle ) -> None:
+        Returns:
+            ArrowStyle: style information
         """
-        Set the arrow style:
+        return self._y
+    
+    @property
+    def z( self ) -> ArrowStyle:
+        """
+        Get the style information for the z-axis
+
+        Returns:
+            ArrowStyle: style information
+        """
+        return self._z
+
+    @x.setter
+    def x( self, x: ArrowStyle ) -> None:
+        """
+        Set the style information for the x-axis
 
         Parameters:
-            style( tuple[ float, float ] | ArrowStyle ): style description for the arrows
+            x ( ArrowStyle ): style information
         """
-        self._arrow = ArrowStyle( style[ 0 ], style[ 1 ] )
-
-    @property
-    def width( self ) -> float:
-        """
-        Get the stroke width of the arrows
-
-        Returns:
-            float: stroke width
-        """
-        return self._width
+        self._x = x
     
+    @y.setter
+    def y( self, y: ArrowStyle ) -> None:
+        """
+        Set the style information for the y-axis
+
+        Parameters:
+            y ( ArrowStyle ): style information
+        """
+        self._y = y
+    
+    @z.setter
+    def z( self, z: ArrowStyle ) -> None:
+        """
+        Set the style information for the z-axis
+
+        Parameters:
+            z ( ArrowStyle ): style information
+        """
+        self._z = z
+
     @property
     def size( self ) -> float:
         """
@@ -242,6 +351,14 @@ class CoordSystemStyle:
         """
         return self._size
     
+    @property
+    def margin( self ) -> float:
+        """
+        Get the margin of the coordinate system area
 
+        Returns:
+            float: margin
+        """
+        return self._margin
     
     

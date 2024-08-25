@@ -1,6 +1,10 @@
 from enum import Enum
-from numpy import ndarray
+from numpy import ndarray, array, zeros, transpose, stack
+from numpy.linalg import norm
 from cadvectorgraphics.util.color import RGBA
+from cadvectorgraphics.util.geometry import normalize
+from cadvectorgraphics.illustrate.components.style import ArrowStyle
+from uuid import uuid4
 
 class SVGElementType( Enum ):
     SVG = 1
@@ -138,7 +142,35 @@ class SVGHelper:
         textelement = SVGElement( SVGElementType.TEXT, x=p[ 0 ], y=p[ 1 ], styleclass=style )
         textelement.append( SVGElement( SVGElementType.ANY, content=text ) )
         return textelement
+    
+    @staticmethod
+    def Arrow( p0: ndarray, p1: ndarray, unitLength: float, style: ArrowStyle ) -> SVGElement:
+        actualLength: float = norm( p1- p0 )
+        adjustedArrowHeadLength = style.headlength * actualLength / unitLength
+        n01: ndarray = normalize( p1 - p0 ).flatten()
+        n01Ortho: ndarray = n01[ array( ( 1, 0 ) ) ] * array( ( 1, - 1 ) )
+        p2 = p0 + ( actualLength * 1.25 ) * n01
+        q0 = p1 - adjustedArrowHeadLength * n01 - n01Ortho * style.headwidth / 2
+        q1 = p1 - adjustedArrowHeadLength * n01 + n01Ortho * style.headwidth / 2
+
+        group = SVGHelper.TransformGroup( ( 1, 1 ),  ( 0, 0 ) )
+        group.append( SVGHelper.Line( p0, p1, style.color, style.strokewidth ) )
+        group.append( SVGHelper.Polygon( transpose( stack( ( p1, q0, q1 ) ) ), style.color, style.color, style.strokewidth ) )
+        if not style.label is None:
+            styleElement = SVGHelper.Style()
+            styleElement.append( CreatefontClass( style.label, style.fontSize, style.color ) )
+            group.append( styleElement )
+
+            # automatic label positioning to avoid overlapping
+            dx = - style.fontSize if sum( n01 * array( ( 1, 0 ) ) ) < 0 else 0
+            dy = style.fontSize if - sum( n01 * array( ( 0, 1 ) ) ) < 0 else 0
+
+            text = SVGHelper.Text( (  p2[ 0 ] + dx,  p2[ 1 ] + dy ), style.label, style.label )
+
+            group.append( text )
+        return group
+        
 
 def CreatefontClass( name: str, size: float, fill: RGBA, sizeUnit: str = "pt", style: str = "italic", font: str = "serif" ) -> SVGElement:
-    fontstyle: str = f"font: { style } { size }px { font }; fill: red;"
+    fontstyle: str = f"font: { style } { size }{ sizeUnit } { font }; fill: rgb{ str( fill ) };"
     return SVGElement( SVGElementType.ANY, content=f".{name} {{ {fontstyle} }}" )
