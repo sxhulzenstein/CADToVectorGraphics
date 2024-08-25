@@ -184,12 +184,14 @@ class Image:
         svg.append( coordGroup )
         return str( svg )
     
-    def write( self, directory: str ) -> None:
+    def write( self, directory: str | None = None ) -> None:
         name = self._renderer.scene.part.name
-        filepath = f"{ directory }/{ name }.svg"
-        f = open( filepath, "w" )
-        svg: str = self._write()
-        f.write( svg )
+        if directory is None:
+            filepath = f"{ name }.svg"
+        else:
+            filepath = f"{ directory }/{ name }.svg"
+        f = open( filepath, "w" ) 
+        f.write( self._write() )
         f.close()
 
         
