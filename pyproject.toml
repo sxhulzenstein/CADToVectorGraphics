@@ -1,10 +1,10 @@
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = ["setuptools>=62.6"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "cadvectorgraphics"
-version = "1.0.4"
+version = "1.0.0"
 authors = [
   { name="Dennis Schulz", email="dennisschulz2000@gmail.com" },
 ]

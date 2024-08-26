@@ -35,18 +35,17 @@ Although the use case is very specific, there are still several features that mi
 * anything that comes to  mind by the users
 
 ## Installation
-The package can be installed using pip with the following command:
+Before installation, please make sure to have the right versions of gmsh, numpy, meshio and cadquery installed
+```
+pip install cadquery, meshio, gmsh, numpy==1.26.0
+```
+
+The package can then be installed using pip with the following command:
 ```
 pip install cadvectorgraphics
 ```
 
 ## Troubleshooting
-
-### Troubles with newer versions of numpy
-If you have the issue of some packages not finding a numpy object, try using an older version (e.g. 1.26) of numpy
-```
-pip install numpy==1.26 --upgrade
-```
 
 ### SVG not really working for MS office applications
 A scalable vector graphic might not be the best choice for the use in MS office applications. A better option would be to use the Enhanced Meta File (EMF). However it's quite easy to convert an SVG to an EMF file using Inkscape. You can either open the SVG in Inkscape directly and save it as a new file with the suitable extension.   
