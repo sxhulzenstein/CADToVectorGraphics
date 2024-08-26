@@ -9,3 +9,21 @@ from .illustrate.illustrate import Image
 from .illustrate.components.style import LineStyle, FaceStyle, CoordSystemStyle
 from .render.components.geometry import EdgeRepresentationType
 from .util.color import RGBA
+
+__All__ = [
+    "VirtualScene",
+    "PartRepresentation",
+    "MeshSize", 
+    "MeshModel", 
+    "MeshModelGenerator",
+    "CADModel",
+    "MaterialProperties",
+    "LightSource",
+    "VirtualRenderer",
+    "Image",
+    "LineStyle", 
+    "FaceStyle", 
+    "CoordSystemStyle",
+    "EdgeRepresentationType",
+    "RGBA"
+]
