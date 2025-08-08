@@ -1,9 +1,10 @@
-from cadvectorgraphics.compose.components.bind import PartRepresentation
-from cadvectorgraphics.compose.components.illuminate import LightSource
-from cadvectorgraphics.compose.components.view import Camera
+from .components.represent import PartRepresentation
+from ..compose.components.illuminate import LightSource
+from ..compose.components.view import Camera
+
 
 class VirtualScene:
-    def __init__( self, part: PartRepresentation ) -> None:
+    def __init__(self, part: PartRepresentation) -> None:
         """
         Create a virtual scene to place the spectator, the parts and the lights
 
@@ -11,29 +12,29 @@ class VirtualScene:
             part ( PartRepresentation ): part for the scene
         """
         self._camera: Camera | None = None
-        self._part: PartRepresentation  = part
-        self._lights: list[ LightSource ] = []
-        
-    def appendLightSource( self, light: LightSource ) -> None:
+        self._part: PartRepresentation = part
+        self._lights: list[LightSource] = []
+
+    def append_light_source(self, light: LightSource) -> None:
         """
         Add a light source to the scene
 
         Parameters:
             light ( LightSource ): the light that shall be added 
         """
-        self._lights.append( light )
-    
-    def setCameraPosition( self, position: tuple[ float, float, float ] ) -> None:
+        self._lights.append(light)
+
+    def set_camera_position(self, position: tuple[float, float, float]) -> None:
         """
         Create and set a new camera
 
         Parameters:
             position ( tuple[ float, float, float ] ): position for the new camera
         """
-        self._camera = Camera( position )
+        self._camera = Camera(position)
 
     @property
-    def camera( self ) -> Camera:
+    def camera(self) -> Camera:
         """
         Get the camera of the scene
 
@@ -42,10 +43,10 @@ class VirtualScene:
         """
         if not self._camera is None:
             return self._camera
-        raise Exception( "Camers is not defined." )
-    
+        raise Exception("Camers is not defined.")
+
     @camera.setter
-    def camera( self, camera: Camera ) -> None:
+    def camera(self, camera: Camera) -> None:
         """
         Set a camera for the scene
 
@@ -53,19 +54,19 @@ class VirtualScene:
             camera ( Camera ): camera which shall be set
         """
         self._camera = camera
-    
+
     @property
-    def part( self ) -> PartRepresentation:
+    def part(self) -> PartRepresentation:
         """
-        Get the part representation
+        Get the part geometry
 
         Returns:
             PartRepresentation: part of this scene
         """
         return self._part
-    
+
     @property
-    def lights( self ) -> list[ LightSource ]:
+    def lights(self) -> list[LightSource]:
         """
         Get the list of light sources
 

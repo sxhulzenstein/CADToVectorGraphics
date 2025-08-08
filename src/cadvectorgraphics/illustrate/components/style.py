@@ -1,8 +1,9 @@
-from cadvectorgraphics.render.components.geometry import EdgeRepresentationType
-from cadvectorgraphics.util.color import RGBA
+from ...render.components.geometry import EdgeRepresentationType
+from ...util.color import RGBA
+
 
 class LineStyle:
-    def __init__( self, edgeType: EdgeRepresentationType ) -> None:
+    def __init__(self, edgeType: EdgeRepresentationType) -> None:
         """
         Create style description for edges
 
@@ -10,12 +11,12 @@ class LineStyle:
             edgeType ( EdgeRepresentationType ): visibility type of the drawn edge
         """
         self._type: EdgeRepresentationType = edgeType
-        self._color: RGBA = RGBA( 0, 0, 0, 255 )
+        self._color: RGBA = RGBA(0, 0, 0, 255)
         self._width: float = 0.
-        self._dash: tuple[ int, ... ] | None = None
-    
+        self._dash: tuple[int, ...] | None = None
+
     @property
-    def width( self ) -> float:
+    def width(self) -> float:
         """
         Get the stroke width of the edge
 
@@ -25,17 +26,17 @@ class LineStyle:
         return self._width
 
     @width.setter
-    def width( self, width: float ) -> None:
+    def width(self, width: float) -> None:
         """
         Set the stroke width of the edge
 
         Parameters:
             width ( float ): new stroke width
         """
-        self._width = abs( width )
-    
-    @property 
-    def color( self ) -> RGBA:
+        self._width = abs(width)
+
+    @property
+    def color(self) -> RGBA:
         """
         Get the stroke color of the line
 
@@ -43,19 +44,19 @@ class LineStyle:
             RGBA: stroke color of the line
         """
         return self._color
-    
+
     @color.setter
-    def color( self, color: tuple[ int, ... ] ) -> None:
+    def color(self, color: tuple[int, ...]) -> None:
         """
         Set the stroke color of the line
 
         Parameters:
             color ( tuple[ int, ... ] ): new stroke color
         """
-        self._color = RGBA( *color )
+        self._color = RGBA(*color)
 
     @property
-    def type( self ) -> EdgeRepresentationType:
+    def type(self) -> EdgeRepresentationType:
         """
         Get the visibility type of the edge
         
@@ -63,9 +64,9 @@ class LineStyle:
             EdgeRepresentationType: edge visibility type
         """
         return self._type
-    
+
     @property
-    def dash( self ) -> tuple[ int, ... ] | None:
+    def dash(self) -> tuple[int, ...] | None:
         """
         Get the dash array for the stroke
 
@@ -73,9 +74,9 @@ class LineStyle:
             tuple[ int, ... ] | None: dash array
         """
         return self._dash
-    
+
     @dash.setter
-    def dash( self, dash: tuple[ int, ... ] ) -> None:
+    def dash(self, dash: tuple[int, ...]) -> None:
         """
         Set the dash array for the stroke
 
@@ -84,20 +85,21 @@ class LineStyle:
         """
         self._dash = dash
 
+
 class FaceStyle:
-    def __init__( self, strokeColor: tuple[ int, ... ] ) -> None:
+    def __init__(self, strokeColor: tuple[int, ...]) -> None:
         """
         Create a style description for the lines of the factes
 
         Parameters:
             strokeColor ( tuple[ int, ... ] ): stroke color of the outline for each face
         """
-        self._color: RGBA = RGBA( *strokeColor )
+        self._color: RGBA = RGBA(*strokeColor)
         self._width: float = 0.03
-        self._dash: tuple[ int, ... ] | None = None
-    
+        self._dash: tuple[int, ...] | None = None
+
     @property
-    def width( self ) -> float:
+    def width(self) -> float:
         """
         Get the stroke width of the face outline
 
@@ -107,17 +109,17 @@ class FaceStyle:
         return self._width
 
     @width.setter
-    def width( self, width: float ) -> None:
+    def width(self, width: float) -> None:
         """
         Set the stroke width of the face outline
 
         Parameters: 
             width ( float ): set the stroke width
         """
-        self._width = abs( width )
-    
-    @property 
-    def color( self ) -> RGBA:
+        self._width = abs(width)
+
+    @property
+    def color(self) -> RGBA:
         """
         Get the stroke color of the face outline
 
@@ -125,19 +127,19 @@ class FaceStyle:
             RGBA: stroke color
         """
         return self._color
-    
+
     @color.setter
-    def color( self, color: tuple[ int, ... ] ) -> None:
+    def color(self, color: tuple[int, ...]) -> None:
         """
         Set the stroke color of the face outline
 
         Parameters:
             color ( tuple[ int, ... ] ): new stroke color
         """
-        self._color = RGBA( *color )
-    
+        self._color = RGBA(*color)
+
     @property
-    def dash( self ) -> tuple[ int, ... ] | None:
+    def dash(self) -> tuple[int, ...] | None:
         """
         Get the dash array for the stroke
 
@@ -145,9 +147,9 @@ class FaceStyle:
             tuple[ int, ... ] | None: dash array
         """
         return self._dash
-    
+
     @dash.setter
-    def dash( self, dash: tuple[ int, ... ] ) -> None:
+    def dash(self, dash: tuple[int, ...]) -> None:
         """
         Set the dash array for the stroke
 
@@ -155,9 +157,10 @@ class FaceStyle:
             dash ( tuple[ int, ... ] ): new dash array
         """
         self._dash = dash
-    
+
+
 class ArrowStyle:
-    def __init__( self, strokewidth: float, color: RGBA, label: str, fontsize: float ) -> None:
+    def __init__(self, strokewidth: float, color: RGBA, label: str, fontsize: float) -> None:
         """
         Create a style description for an arrow
 
@@ -171,9 +174,9 @@ class ArrowStyle:
         self._label: str = label
         self._strokecolor: RGBA = color
         self._fontsize: float = fontsize
-    
+
     @property
-    def headwidth( self ) -> float:
+    def headwidth(self) -> float:
         """
         Get the width of the arrow head multiplied by stroke width
 
@@ -181,9 +184,9 @@ class ArrowStyle:
             float: width
         """
         return self._headwidth
-    
+
     @property
-    def headlength( self ) -> float:
+    def headlength(self) -> float:
         """
         Get the length of the arrow head multiplied by stroke width
         
@@ -191,9 +194,9 @@ class ArrowStyle:
             float: length
         """
         return self._headlength
-    
+
     @headwidth.setter
-    def headwidth( self, width: float ) -> None:
+    def headwidth(self, width: float) -> None:
         """
         Set the width of the arrow head prefactor for stroke width
         
@@ -201,19 +204,19 @@ class ArrowStyle:
             width ( float ): length
         """
         self._headwidth = width * self._headwidth
-    
+
     @headlength.setter
-    def headlength( self, length ) -> None:
+    def headlength(self, length) -> None:
         """
         Set the length of the arrow head prefactor for stroke width
         
         Parameters:
             length ( float ): length
         """
-        self._headlength = self._strokeWidth * length 
+        self._headlength = self._strokeWidth * length
 
     @property
-    def label( self ) -> str:
+    def label(self) -> str:
         """
         Get the arrow's label
 
@@ -221,9 +224,9 @@ class ArrowStyle:
             str: arrow label
         """
         return self._label
-    
+
     @property
-    def color( self ) -> RGBA:
+    def color(self) -> RGBA:
         """
         Get the stroke color
 
@@ -231,9 +234,9 @@ class ArrowStyle:
             RGBA: stroke color
         """
         return self._strokecolor
-    
+
     @property
-    def strokewidth( self ) -> float:
+    def strokewidth(self) -> float:
         """
         Get the stroke width
 
@@ -241,9 +244,9 @@ class ArrowStyle:
             float: stroke width
         """
         return self._strokeWidth
-    
+
     @strokewidth.setter
-    def strokewidth( self, strokewidth: float ) -> float:
+    def strokewidth(self, strokewidth: float) -> float:
         """
         Set the stroke width
 
@@ -256,7 +259,7 @@ class ArrowStyle:
         self._strokeWidth = strokewidth
 
     @property
-    def fontSize( self ) -> float:
+    def fontSize(self) -> float:
         """
         Get the font size
 
@@ -267,7 +270,7 @@ class ArrowStyle:
 
 
 class CoordSystemStyle:
-    def __init__( self, size: float ) -> None:
+    def __init__(self, size: float) -> None:
         """
         Create a style description for the coordinate system
 
@@ -276,13 +279,13 @@ class CoordSystemStyle:
         """
         self._size: float = size
         self._fontsize = size / 5
-        self._x: ArrowStyle = ArrowStyle( size / 25., RGBA( 0, 0, 0 ), "x", self._fontsize )
-        self._y: ArrowStyle = ArrowStyle( size / 25., RGBA( 0, 0, 0 ), "y", self._fontsize)
-        self._z: ArrowStyle = ArrowStyle( size / 25., RGBA( 0, 0, 0 ), "z", self._fontsize)
+        self._x: ArrowStyle = ArrowStyle(size / 25., RGBA(0, 0, 0), "x", self._fontsize)
+        self._y: ArrowStyle = ArrowStyle(size / 25., RGBA(0, 0, 0), "y", self._fontsize)
+        self._z: ArrowStyle = ArrowStyle(size / 25., RGBA(0, 0, 0), "z", self._fontsize)
         self._margin = 2 * size
-    
+
     @property
-    def x( self ) -> ArrowStyle:
+    def x(self) -> ArrowStyle:
         """
         Get the style information for the x-axis
 
@@ -290,9 +293,9 @@ class CoordSystemStyle:
             ArrowStyle: style information
         """
         return self._x
-    
+
     @property
-    def y( self ) -> ArrowStyle:
+    def y(self) -> ArrowStyle:
         """
         Get the style information for the y-axis
 
@@ -300,9 +303,9 @@ class CoordSystemStyle:
             ArrowStyle: style information
         """
         return self._y
-    
+
     @property
-    def z( self ) -> ArrowStyle:
+    def z(self) -> ArrowStyle:
         """
         Get the style information for the z-axis
 
@@ -312,7 +315,7 @@ class CoordSystemStyle:
         return self._z
 
     @x.setter
-    def x( self, x: ArrowStyle ) -> None:
+    def x(self, x: ArrowStyle) -> None:
         """
         Set the style information for the x-axis
 
@@ -320,9 +323,9 @@ class CoordSystemStyle:
             x ( ArrowStyle ): style information
         """
         self._x = x
-    
+
     @y.setter
-    def y( self, y: ArrowStyle ) -> None:
+    def y(self, y: ArrowStyle) -> None:
         """
         Set the style information for the y-axis
 
@@ -330,9 +333,9 @@ class CoordSystemStyle:
             y ( ArrowStyle ): style information
         """
         self._y = y
-    
+
     @z.setter
-    def z( self, z: ArrowStyle ) -> None:
+    def z(self, z: ArrowStyle) -> None:
         """
         Set the style information for the z-axis
 
@@ -342,7 +345,7 @@ class CoordSystemStyle:
         self._z = z
 
     @property
-    def size( self ) -> float:
+    def size(self) -> float:
         """
         Get the size of the coordinate system
         
@@ -350,9 +353,9 @@ class CoordSystemStyle:
             float: size of the coordinate system
         """
         return self._size
-    
+
     @property
-    def margin( self ) -> float:
+    def margin(self) -> float:
         """
         Get the margin of the coordinate system area
 
@@ -360,5 +363,3 @@ class CoordSystemStyle:
             float: margin
         """
         return self._margin
-    
-    

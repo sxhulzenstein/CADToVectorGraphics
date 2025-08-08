@@ -1,35 +1,36 @@
-from numpy.typing import NDArray
-from numpy import array, zeros, transpose, ndarray, min, max, int64
-from cadvectorgraphics.compose.components.representation.mesh import Geometry, Topology
-from cadvectorgraphics.util.color import RGBA
+from numpy import array, zeros, transpose, ndarray, min, max
+from ...compose.components.geometry.mesh import Geometry, Topology
+from ...util.color import RGBA
+from ...util.exceptions import WrongGeometryDimensionException
 from enum import Enum
 from cadquery.occ_impl.shapes import Edge
 from OCP.GCPnts import GCPnts_QuasiUniformDeflection as CurvePointsGenerator
-
+from functools import cached_property
 
 class PlanarFacet:
     def __init__( self, points: ndarray, color: RGBA ) -> None:
         """
-        Create a two dimensional representation of a facet
+        Create a two dimensional geometry of a facet
 
         Parameters:
             points ( ndarray ): a ( 2 x N ) numpy array containing the nodes of the face
             color ( RGBA ): color of the facet
         """
-        self.points: NDArray = points
+        self.points: ndarray = points
         self.color: RGBA = color
+
 
 class PlanarMeshRepresentation:
     def __init__( self, geometry: list[ Geometry ], topology: list[ Topology ] ) -> None:
         """
-        Create a planar mesh representation for multiple solids
+        Create a planar mesh geometry for multiple solids
 
         Parameters:
             geometry ( list[ Geometry ] ): planar geometries
             topology ( list[ Topology ] ): list of topologies
         """
         if not geometry[ 0 ].dimension == 2:
-            raise Exception()
+            raise WrongGeometryDimensionException(2, geometry[ 0 ].dimension)
 
         self._geometry: list[ Geometry ] = geometry
         self._topology: list[ Topology ] = topology
@@ -94,11 +95,11 @@ class PlanarMeshRepresentation:
         if not facetId in self.sorted[ 1, : ]:
             raise Exception()
         
-        p: NDArray = self._geometry[ int( meshId ) ].base[ :, array( self._topology[ int( meshId ) ] [ int( facetId ) ] ).flatten() ]
+        p: ndarray = self._geometry[ int( meshId ) ].base[ :, array( self._topology[ int( meshId ) ] [ int( facetId ) ] ).flatten() ]
         if self._colors is None:
             raise Exception()
         
-        c: NDArray = self._colors[ int(meshId) ][ :, int(facetId) ].flatten()
+        c: ndarray = self._colors[ int(meshId) ][ :, int(facetId) ].flatten()
         return PlanarFacet( p, RGBA( *c ) )
     
     def __iter__( self ):
@@ -125,8 +126,9 @@ class PlanarMeshRepresentation:
             raise StopIteration()
 
         return self.facet( *self._visible[ :, index ].flatten() )
-    
-    def boundingBox( self ) -> ndarray:
+
+    @cached_property
+    def bounding_box(self) -> ndarray:
         """
         Calculate the two-dimensional boundingbox by using all geometry objects
 
@@ -147,6 +149,7 @@ class PlanarMeshRepresentation:
         bb[ :, 2 ] = bb[ :, 1 ] - bb[ :, 0 ] 
         return bb 
 
+
 class EdgeRepresentationType( Enum ):
     """
     Enum for classifying the edges
@@ -157,56 +160,58 @@ class EdgeRepresentationType( Enum ):
     HIDDENSHARPWIRE = 4 
     VISIBLESHARPWIRE = 5
 
+
 class PlanarEdge:
-    def __init__( self, points: NDArray ) -> None:
-        self._points: NDArray = points
+    def __init__( self, points: ndarray ) -> None:
+        self._points: ndarray = points
 
     @property
-    def start( self ) -> NDArray:
+    def start( self ) -> ndarray:
         return self._points[ :, 0 ]
 
     @property
-    def end( self ) -> NDArray:
+    def end( self ) -> ndarray:
         return self._points[ :, -1 ]
     
     @property
-    def points( self ) -> NDArray:
+    def points( self ) -> ndarray:
         return self._points
 
 
-class PlanarEdgesRepresentation:    
-    def __init__( self, edges: list[ Edge ], edgeType: EdgeRepresentationType ) -> None:
+class PlanarEdgesCollection:
+    def __init__(self, edges: list[ Edge ], edge_type: EdgeRepresentationType) -> None:
         """
-        Create a planar edges representation
+        Create a planar edges geometry
 
         Parameters:
             edges ( list[ Edge ] ): a list containing cadquery edges
-            edgeType ( EdgeRepresentationType ): type of representation for all edges in list
+            edge_type ( EdgeRepresentationType ): type of geometry for all edges in list
         """
-        self._wires: list[ PlanarEdge ] = self._createWiresFromEdgeList( edges )
-        self._type: EdgeRepresentationType = edgeType
+        self._wires: list[ PlanarEdge ] = PlanarEdgesCollection._create_wires_from_edges(edges)
+        self._type: EdgeRepresentationType = edge_type
 
-    def _adaptEdgeIntoCurve(self, edge):
+    @staticmethod
+    def _adapt_edge_into_curve(edge: Edge):
         return edge._geomAdaptor()
 
-    def _generatePointsOnWireCurve(self, edge: Edge) -> NDArray:
-        curve = self._adaptEdgeIntoCurve( edge )
+    @staticmethod
+    def _generate_points_on_wire_curve(edge: Edge) -> ndarray:
+        curve = PlanarEdgesCollection._adapt_edge_into_curve(edge)
         start: float = curve.FirstParameter()
         end: float = curve.LastParameter()
         tolerance: float = 1.e-2
         points: CurvePointsGenerator = CurvePointsGenerator( curve, tolerance, start, end )
 
         if not points.IsDone():
-            raise Exception()
+            return array([[], []])
         
         return transpose( array( [ [ points.Value( i + 1 ).X(), points.Value( i + 1 ).Y() ] 
                                   for i in range( points.NbPoints() ) ] ) )
 
-    def _createWiresFromEdgeList( self, edges: list[ Edge ] ) -> list[ PlanarEdge ]:
-        mappedEdges: list[ PlanarEdge ] = []
-        for edge in edges:
-            mappedEdges.append( PlanarEdge( self._generatePointsOnWireCurve( edge ) ) )
-        return mappedEdges
+    @staticmethod
+    def _create_wires_from_edges(edges: list[Edge]) -> list[ PlanarEdge]:
+        return [PlanarEdge(PlanarEdgesCollection._generate_points_on_wire_curve(edge)) for edge in edges]
+
 
 class PlanarCoordinateSystemRepresentation:
     def __init__( self, x: ndarray, y: ndarray, z: ndarray) -> None:

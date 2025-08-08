@@ -1,8 +1,8 @@
 from .compose.compose import VirtualScene
-from .compose.components.bind import PartRepresentation
-from .compose.components.representation.mesh import MeshSize, MeshModel, MeshModelGenerator
-from .compose.components.representation.cad import CADModel
-from .compose.components.representation.material import MaterialProperties
+from .compose.components.represent import PartRepresentation
+from .compose.components.geometry.mesh import Mesh, MeshModelGenerator
+from .compose.components.geometry.cad import CADModel
+from .compose.components.geometry.material import MaterialProperties
 from .compose.components.illuminate import LightSource
 from .render.render import VirtualRenderer
 from .illustrate.illustrate import Image

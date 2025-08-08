@@ -1,11 +1,14 @@
 from typing import Optional
-from cadvectorgraphics.compose.compose import VirtualScene
-from cadvectorgraphics.render.components.project import Projector
-from cadvectorgraphics.render.components.geometry import PlanarMeshRepresentation, PlanarEdgesRepresentation, PlanarCoordinateSystemRepresentation
+from ..compose.compose import VirtualScene
+from ..render.components.project import Projector
+from ..render.components.geometry import PlanarMeshRepresentation, PlanarEdgesCollection, \
+    PlanarCoordinateSystemRepresentation
 from numpy import ndarray
+
 
 class ColorTable:
     ...
+
 
 class VirtualRenderer:
     def __init__(self, scene: VirtualScene) -> None:
@@ -16,13 +19,13 @@ class VirtualRenderer:
             scene ( VirtualScene ): the renderer is created by passing a scene
         """
         self._scene: VirtualScene = scene
-        self._projector: Projector = Projector( scene.camera )
+        self._projector: Projector = Projector(scene.camera)
         self._facets: PlanarMeshRepresentation | None = None
-        self._edges: list[ PlanarEdgesRepresentation ] = []
-        self._coordinatesystem: PlanarCoordinateSystemRepresentation | None = None
+        self._edges: list[PlanarEdgesCollection] = []
+        self._coordinate_system: PlanarCoordinateSystemRepresentation | None = None
 
     @property
-    def scene( self ) -> VirtualScene:
+    def scene(self) -> VirtualScene:
         """
         Get the scene within the renderer
 
@@ -31,33 +34,33 @@ class VirtualRenderer:
         """
         return self._scene
 
-    def render( self, colorTable: Optional[ ColorTable ] = None ) -> None:
+    def render(self, color_table: ColorTable | None = None) -> None:
         """
-        Render the part using the camera, the part itself and its surounding lights
+        Render the part using the camera, the part itself and its surrounding lights
 
         Parameters:
-            colorTable ( Optional[ ColorTable ] = None ): color table ( not implemented yet )
+            color_table ( Optional[ ColorTable ] = None ): color table ( not implemented yet )
         """
-        self._facets = self._projector.projectFacets( self._scene.part )
-        self._facets.sorted = self._projector.determineVisibleFaces( self._scene.part )
-        self._facets.colors = self._projector.determineFaceColors( self._scene.part, self._scene._lights, colorTable )
-        self._edges = self._projector.projectCurvesAndEdges( self._scene.part )
-        self._coordinatesystem = self._projector.getCoordinateSystem()
-    
-    def boundingBox( self ) -> ndarray:
+        self._facets = self._projector.project_facets(self._scene.part)
+        self._facets.sorted = self._projector.determine_visible_faces(self._scene.part)
+        self._facets.colors = self._projector.determine_face_colors(self._scene.part, self._scene.lights, color_table)
+        self._edges = self._projector.project_curves_and_edges(self._scene.part)
+        self._coordinate_system = self._projector.get_coordinate_system()
+
+    def bounding_box(self) -> ndarray:
         """
         Get the bounding box of the 2D mesh
 
         Returns:
             ndarray: bounding box as ( 2 x 3 ) numpy array
         """
-        return self._facets.boundingBox()
-    
-    def system( self ) -> PlanarCoordinateSystemRepresentation:
+        return self._facets.bounding_box
+
+    def system(self) -> PlanarCoordinateSystemRepresentation:
         """
-        Get the coordinate system representation
+        Get the coordinate system geometry
 
         Returns:
             PlanarCoordinateSystemRepresentation: 2D coordinate system
         """
-        return self._coordinatesystem
+        return self._coordinate_system

@@ -1,5 +1,5 @@
 from random import randint
-
+from matplotlib.colors import to_hex
 class RGBA:
     def __init__( self, r: int, g: int, b: int, a: int = 255 ) -> None:
         """
@@ -92,7 +92,10 @@ class RGBA:
             tuple[ int, int, int, int ]: color as tuple
         """
         return self._r, self._g, self._b, self._a
-    
+
+    def to_hex(self) -> str:
+        return to_hex((self._r / 255.0, self._g / 255.0, self._b / 255.0, self._a / 255.0))
+
 
 def randomGrayColor( lowerBound: int, upperBound: int ) -> RGBA:
     """

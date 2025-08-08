@@ -71,64 +71,64 @@ from cadquery import Workplane, exporters
 
 # providing an initial model with cadquery
 # the CAD-file can be obtained from any prefered CAD-system
-box = Workplane().box( 10, 10, 10 ).edges( "|Z" ).fillet( 1 ).faces(">Z").workplane().cboreHole( 5, 7, 3 )
-exporters.export( box, "model.step" )
+box = Workplane().box(10, 10, 10).edges("|Z").fillet(1).faces(">Z").workplane().cboreHole(5, 7, 3)
+exporters.export(box, "model.step")
 
-# importing the file to a CAD-model representation
-part = PartRepresentation( "model.step" )
-part.color( 0, ( 100, 200, 100 ) )
+# importing the file to a CAD-model geometry
+part = PartRepresentation("model.step")
+part.set_color(0, (100, 200, 100))
 
 # creating a mesh from the CAD-file
-part.tessellateAll( size = MeshSize.GRAINY )
+part.generate_all_meshes(size=MeshSize.GRAINY)
 
 # creating a scene to assemble all necessary objects such as the view, the ligths and the model
-scene = VirtualScene( part )
-scene.setCameraPosition( position = ( 15, 15, 15 ) )
+scene = VirtualScene(part)
+scene.set_camera_position(position=(15, 15, 15))
 
 # adding a light source
 # multiple lights can be added
 # if none is added, the object will be displayed with the given base color
-lightSource = LightSource( position = ( 20, 10, 0 ) )
-lightSource.color = ( 150, 50, 255 )
-scene.appendLightSource( light = lightSource )
+lightSource = LightSource(position=(20, 10, 0))
+lightSource.set_color = (150, 50, 255)
+scene.append_light_source(light=lightSource)
 
 # adding the scene with all components to a renderer
-renderer: VirtualRenderer = VirtualRenderer( scene )
+renderer: VirtualRenderer = VirtualRenderer(scene)
 renderer.render()
 
 # creating an image from the renderer result
-image = Image( renderer )
+image = Image(renderer)
 
 # zooming into the geometry
-image.zoom = ( 10, 10 )
+image.zoom = (10, 10)
 
 # scaling all elements of the image
-image.scale = ( 1, 1 )
+image.scale = (1, 1)
 
 # setting margins
-image.margins = ( 5, 5 )
+image.margins = (5, 5)
 
 # creating line styles for special edges and curves
 # if none is added, only the mesh is visible
-visibleOutlineStyle = LineStyle( EdgeRepresentationType.VISIBLEOUTLINE )
+visibleOutlineStyle = LineStyle(EdgeRepresentationType.VISIBLEOUTLINE)
 visibleOutlineStyle.width = 0.25
-visibleOutlineStyle.color = ( 0, 0, 0 )
-image.addLineStyle( visibleOutlineStyle )
+visibleOutlineStyle.set_color = (0, 0, 0)
+image.addLineStyle(visibleOutlineStyle)
 
-visibleSharpStyle = LineStyle( EdgeRepresentationType.VISIBLESHARPWIRE )
+visibleSharpStyle = LineStyle(EdgeRepresentationType.VISIBLESHARPWIRE)
 visibleSharpStyle.width = 0.25
-visibleSharpStyle.color = ( 0, 0, 0 )
-image.addLineStyle( visibleSharpStyle )
+visibleSharpStyle.set_color = (0, 0, 0)
+image.addLineStyle(visibleSharpStyle)
 
-visibleSmoothStyle = LineStyle( EdgeRepresentationType.VISIBLESMOOTHWIRE )
+visibleSmoothStyle = LineStyle(EdgeRepresentationType.VISIBLESMOOTHWIRE)
 visibleSmoothStyle.width = 0.1
-visibleSmoothStyle.color = ( 0, 0, 0 )
-visibleSmoothStyle.dash = ( 1, 0.2, 0.2, 0.2 )
-image.addLineStyle( visibleSmoothStyle )
+visibleSmoothStyle.set_color = (0, 0, 0)
+visibleSmoothStyle.dash = (1, 0.2, 0.2, 0.2)
+image.addLineStyle(visibleSmoothStyle)
 
 # creating style information for the coordinate system
-coordStyle = CoordSystemStyle( size = 30 )
-image.setCoordSystemStyle( coordStyle )
+coordStyle = CoordSystemStyle(size=30)
+image.setCoordSystemStyle(coordStyle)
 
 # export the image as svg
 image.write()
