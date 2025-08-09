@@ -48,12 +48,12 @@ class SVGElement:
             return
         self._contents.extend(contents)
 
-    def _write_additional_argumenst(self) -> str:
+    def _write_additional_arguments(self) -> str:
         contents = [f"{key}=\"{content}\"" for key, content in list(self._args.items())]
         return " ".join(contents)
 
     def write(self, output_list: list[str]) -> None:
-        arg_str: str = self._write_additional_argumenst()
+        arg_str: str = self._write_additional_arguments()
 
         if self._type == SVGElementType.SVG:
             output_list.append("""<?xml version="1.0" encoding="UTF-8" standalone="no"?>\n""")
@@ -61,36 +61,44 @@ class SVGElement:
             for content in self._contents:
                 content.write(output_list)
             output_list.append("</svg>\n")
+            return
 
         if self._type == SVGElementType.GROUP:
             output_list.append(f"<g {arg_str} >\n")
             for content in self._contents:
                 content.write(output_list)
             output_list.append("</g>\n")
+            return
 
         if self._type == SVGElementType.STYLE:
             output_list.append(f"<style>\n")
             for content in self._contents:
                 content.write(output_list)
             output_list.append("</style>\n")
+            return
 
         if self._type == SVGElementType.LINE:
             output_list.append(f"<line {arg_str} />\n")
+            return
 
         if self._type == SVGElementType.POLYGON:
             output_list.append(f"<polygon {arg_str} />\n")
+            return
 
         if self._type == SVGElementType.PATH:
             output_list.append(f"<path {arg_str} />\n")
+            return
 
         if self._type == SVGElementType.TEXT:
             output_list.append(f"<text {arg_str}>\n")
             for content in self._contents:
                 content.write(output_list)
             output_list.append("</text>")
+            return
 
         if self._type == SVGElementType.ANY:
             output_list.append(str(self._args["content"]) + "\n")
+            return
 
     def __str__(self) -> str:
         output: list[str] = []
@@ -100,11 +108,14 @@ class SVGElement:
 
 class SVGHelper:
     @staticmethod
-    def path(points: ndarray) -> SVGElement:
+    def path(points: ndarray, stroke_color: RGBA, stroke_width: float, dash: tuple[float, ...] = (1, 0)) -> SVGElement:
         x, y = list(points[0, :]), list(points[1, :])
         path = [f"M{x[0]},{y[0]}"]
         path.extend([f"L{xi},{yi}" for xi, yi in zip(x[1:], y[1:])])
-        return SVGElement(SVGElementType.PATH, d=' '.join(path))
+        dasharray = ', '.join(str(v) for v in dash)
+        return SVGElement(SVGElementType.PATH, d=' '.join(path), stroke=f"{stroke_color.to_hex()}", strokewidth=stroke_width,
+                          strokeopacity=stroke_color.opacity, strokelinejoin="round",
+                          strokelinecap="round", strokedasharray=dasharray, fill="none")
 
     @staticmethod
     def transform_group(scale: tuple[float, float], translate: tuple[float, float]) -> SVGElement:
