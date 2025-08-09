@@ -47,6 +47,7 @@ class VirtualRenderer:
         self._edges = self._projector.project_curves_and_edges(self._scene.part)
         self._coordinate_system = self._projector.get_coordinate_system()
 
+    @property
     def bounding_box(self) -> ndarray:
         """
         Get the bounding box of the 2D mesh
@@ -56,6 +57,7 @@ class VirtualRenderer:
         """
         return self._facets.bounding_box
 
+    @property
     def system(self) -> PlanarCoordinateSystemRepresentation:
         """
         Get the coordinate system geometry
@@ -64,3 +66,11 @@ class VirtualRenderer:
             PlanarCoordinateSystemRepresentation: 2D coordinate system
         """
         return self._coordinate_system
+
+    @property
+    def facets(self) -> PlanarMeshRepresentation | None:
+        return self._facets
+
+    @property
+    def edges(self) -> list[PlanarEdgesCollection]:
+        return self._edges

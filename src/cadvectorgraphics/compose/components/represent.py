@@ -59,7 +59,7 @@ class PartRepresentation:
         Generate a mesh for a specific solid
         """
         self._assert_is_valid_index(solid_index)
-        self._solids[solid_index].mesh = Mesh(MeshModelGenerator.generate(self._solids[solid_index].base, options))
+        self._solids[solid_index].mesh = Mesh(*MeshModelGenerator.generate(self._solids[solid_index].base, options))
 
     def set_mesh(self, solid_index: int, mesh: Mesh) -> None:
         """

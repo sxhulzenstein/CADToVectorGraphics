@@ -8,7 +8,8 @@ class Topology:
         Creating an object which contains the topological information of a mesh
 
         Parameters:
-            topology ( list[ tuple[ int, ... ] ] | list[ list[ int ] ]  ): topological information
+            triangles ( list[ tuple[ int, ... ] ] | list[ list[ int ] ]  ): topological information
+            quadrilaterals
         """
         self._base: dict[int, ndarray] = ({key: triangles[:, key].flatten()
                                            for key in range(triangles.shape[1])}

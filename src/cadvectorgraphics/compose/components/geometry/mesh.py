@@ -1,5 +1,4 @@
 from cadquery import Vector as VectorBase
-from numpy import ndarray, hstack
 from numpy import array, zeros, cross, ndarray, transpose
 from ....util.geometry import columnwise_normalize
 from .cad import CADModel
@@ -20,7 +19,8 @@ class Mesh:
 
         Parameters:
             geometry ( list[ VectorBase ] | ndarray ): geometric information
-            topology ( list[ tuple[ int, ... ] ] | list[ list[ int ] ] ): topological information
+            triangles ( list[ tuple[ int, ... ] ] | list[ list[ int ] ] ): topological information
+            quadrilaterals:
         """
         self._geometry: Geometry = Geometry(geometry)
         self._topology: Topology = Topology(triangles, quadrilaterals)
@@ -30,7 +30,8 @@ class Mesh:
     @classmethod
     def from_file(cls, file_path: str) -> "Mesh":
         mesh_info = read(file_path)
-        return cls(transpose(array(mesh_info.points)), mesh_info.get_cells_type("triangle"))
+        return cls(transpose(array(mesh_info.points)), transpose(mesh_info.get_cells_type("triangle")),
+                   transpose(mesh_info.get_cells_type("quad")))
 
     @classmethod
     def from_model(cls, model: CADModel | Solid, options) -> "Mesh":
@@ -59,7 +60,7 @@ class Mesh:
     @property
     def topology(self) -> Topology:
         """
-        Get the the topology of the mesh
+        Get the topology of the mesh
 
         Returns:
             Topology: topology of the mesh
@@ -69,7 +70,7 @@ class Mesh:
     @property
     def geometry(self) -> Geometry:
         """
-        Get the the geometry of the mesh
+        Get the geometry of the mesh
 
         Returns:
             Geometry: geometry of the mesh

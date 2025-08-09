@@ -1,4 +1,3 @@
-import logging
 from .cad import CADModel
 from cadquery import Solid, exporters
 import gmsh

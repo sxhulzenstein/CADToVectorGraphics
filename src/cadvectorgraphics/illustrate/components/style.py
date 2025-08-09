@@ -3,14 +3,14 @@ from ...util.color import RGBA
 
 
 class LineStyle:
-    def __init__(self, edgeType: EdgeRepresentationType) -> None:
+    def __init__(self, edge_type: EdgeRepresentationType) -> None:
         """
         Create style description for edges
 
         Parameters:
-            edgeType ( EdgeRepresentationType ): visibility type of the drawn edge
+            edge_type ( EdgeRepresentationType ): visibility type of the drawn edge
         """
-        self._type: EdgeRepresentationType = edgeType
+        self._type: EdgeRepresentationType = edge_type
         self._color: RGBA = RGBA(0, 0, 0, 255)
         self._width: float = 0.
         self._dash: tuple[int, ...] | None = None
@@ -87,14 +87,14 @@ class LineStyle:
 
 
 class FaceStyle:
-    def __init__(self, strokeColor: tuple[int, ...]) -> None:
+    def __init__(self, stroke_color: tuple[int, ...]) -> None:
         """
         Create a style description for the lines of the factes
 
         Parameters:
-            strokeColor ( tuple[ int, ... ] ): stroke color of the outline for each face
+            stroke_color ( tuple[ int, ... ] ): stroke color of the outline for each face
         """
-        self._color: RGBA = RGBA(*strokeColor)
+        self._color: RGBA = RGBA(*stroke_color)
         self._width: float = 0.03
         self._dash: tuple[int, ...] | None = None
 
@@ -160,60 +160,62 @@ class FaceStyle:
 
 
 class ArrowStyle:
-    def __init__(self, strokewidth: float, color: RGBA, label: str, fontsize: float) -> None:
+    def __init__(self, stroke_width: float, color: RGBA, label: str, font_size: float) -> None:
         """
         Create a style description for an arrow
 
-        Parameters:
-            width ( float ): width of the arrow head
-            length ( float ): length of the arrow head
+        Args:
+            stroke_width:
+            color:
+            label:
+            font_size:
         """
-        self._strokeWidth: float = strokewidth
-        self._headwidth: float = strokewidth * 3
-        self._headlength: float = strokewidth * 4
+        self._stroke_width: float = stroke_width
+        self._head_width: float = stroke_width * 3
+        self._head_length: float = stroke_width * 4
         self._label: str = label
-        self._strokecolor: RGBA = color
-        self._fontsize: float = fontsize
+        self._stroke_color: RGBA = color
+        self._font_size: float = font_size
 
     @property
-    def headwidth(self) -> float:
+    def head_width(self) -> float:
         """
         Get the width of the arrow head multiplied by stroke width
 
         Returns:
             float: width
         """
-        return self._headwidth
+        return self._head_width
 
     @property
-    def headlength(self) -> float:
+    def head_length(self) -> float:
         """
         Get the length of the arrow head multiplied by stroke width
         
         Returns:
             float: length
         """
-        return self._headlength
+        return self._head_length
 
-    @headwidth.setter
-    def headwidth(self, width: float) -> None:
+    @head_width.setter
+    def head_width(self, width: float) -> None:
         """
-        Set the width of the arrow head prefactor for stroke width
+        Set the width of the arrow head pre-factor for stroke width
         
         Parameters:
             width ( float ): length
         """
-        self._headwidth = width * self._headwidth
+        self._head_width = width * self._head_width
 
-    @headlength.setter
-    def headlength(self, length) -> None:
+    @head_length.setter
+    def head_length(self, length) -> None:
         """
         Set the length of the arrow head prefactor for stroke width
         
         Parameters:
             length ( float ): length
         """
-        self._headlength = self._strokeWidth * length
+        self._head_length = self._stroke_width * length
 
     @property
     def label(self) -> str:
@@ -233,40 +235,40 @@ class ArrowStyle:
         Returns:
             RGBA: stroke color
         """
-        return self._strokecolor
+        return self._stroke_color
 
     @property
-    def strokewidth(self) -> float:
+    def stroke_width(self) -> float:
         """
         Get the stroke width
 
         Returns:
             float: stroke width
         """
-        return self._strokeWidth
+        return self._stroke_width
 
-    @strokewidth.setter
-    def strokewidth(self, strokewidth: float) -> float:
+    @stroke_width.setter
+    def stroke_width(self, stroke_width: float) -> None:
         """
         Set the stroke width
 
         Parameters:
-            strokewidth ( float ): new stroke width
+            stroke_width ( float ): new stroke width
         """
-        oldWidth = self._strokeWidth
-        self._headwidth *= strokewidth / oldWidth
-        self._headlength *= strokewidth / oldWidth
-        self._strokeWidth = strokewidth
+        old_width = self._stroke_width
+        self._head_width *= stroke_width / old_width
+        self._head_length *= stroke_width / old_width
+        self._stroke_width = stroke_width
 
     @property
-    def fontSize(self) -> float:
+    def font_size(self) -> float:
         """
         Get the font size
 
         Returns:
             float: font size
         """
-        return self._fontsize
+        return self._font_size
 
 
 class CoordSystemStyle:
@@ -278,10 +280,10 @@ class CoordSystemStyle:
             size ( float ): illustration size of the coord system
         """
         self._size: float = size
-        self._fontsize = size / 5
-        self._x: ArrowStyle = ArrowStyle(size / 25., RGBA(0, 0, 0), "x", self._fontsize)
-        self._y: ArrowStyle = ArrowStyle(size / 25., RGBA(0, 0, 0), "y", self._fontsize)
-        self._z: ArrowStyle = ArrowStyle(size / 25., RGBA(0, 0, 0), "z", self._fontsize)
+        self._font_size = size / 5
+        self._x: ArrowStyle = ArrowStyle(size / 25., RGBA(0, 0, 0), "x", self._font_size)
+        self._y: ArrowStyle = ArrowStyle(size / 25., RGBA(0, 0, 0), "y", self._font_size)
+        self._z: ArrowStyle = ArrowStyle(size / 25., RGBA(0, 0, 0), "z", self._font_size)
         self._margin = 2 * size
 
     @property

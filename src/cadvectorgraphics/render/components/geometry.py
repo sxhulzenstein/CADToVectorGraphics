@@ -212,6 +212,18 @@ class PlanarEdgesCollection:
     def _create_wires_from_edges(edges: list[Edge]) -> list[ PlanarEdge]:
         return [PlanarEdge(PlanarEdgesCollection._generate_points_on_wire_curve(edge)) for edge in edges]
 
+    @property
+    def edges_type(self) -> EdgeRepresentationType:
+        """
+        Get the type of the edges
+        """
+        return self._type
+
+    def edges(self) -> list[PlanarEdge]:
+        """
+        Get the planar edges
+        """
+        return self._wires
 
 class PlanarCoordinateSystemRepresentation:
     def __init__( self, x: ndarray, y: ndarray, z: ndarray) -> None:

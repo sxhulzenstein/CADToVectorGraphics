@@ -112,22 +112,22 @@ image.margins = (5, 5)
 visibleOutlineStyle = LineStyle(EdgeRepresentationType.VISIBLEOUTLINE)
 visibleOutlineStyle.width = 0.25
 visibleOutlineStyle.set_color = (0, 0, 0)
-image.addLineStyle(visibleOutlineStyle)
+image.add_line_style(visibleOutlineStyle)
 
 visibleSharpStyle = LineStyle(EdgeRepresentationType.VISIBLESHARPWIRE)
 visibleSharpStyle.width = 0.25
 visibleSharpStyle.set_color = (0, 0, 0)
-image.addLineStyle(visibleSharpStyle)
+image.add_line_style(visibleSharpStyle)
 
 visibleSmoothStyle = LineStyle(EdgeRepresentationType.VISIBLESMOOTHWIRE)
 visibleSmoothStyle.width = 0.1
 visibleSmoothStyle.set_color = (0, 0, 0)
 visibleSmoothStyle.dash = (1, 0.2, 0.2, 0.2)
-image.addLineStyle(visibleSmoothStyle)
+image.add_line_style(visibleSmoothStyle)
 
 # creating style information for the coordinate system
 coordStyle = CoordSystemStyle(size=30)
-image.setCoordSystemStyle(coordStyle)
+image.set_coord_system_style(coordStyle)
 
 # export the image as svg
 image.write()

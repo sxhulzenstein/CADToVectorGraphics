@@ -142,7 +142,9 @@ class Projector:
             part ( PartRepresentation ): part holding a collection of Solids
         
         Returns:
-            ndarray: indices as ( 2 x N ) numpy array where the first row contains the index of the solid and the second row the face index whithin that solid
+            ndarray:
+                indices as ( 2 x N ) numpy array where the first row contains the index of the solid and the second row
+                the face index whithin that solid
         """
         return self._sort_faces_by_position(self._remove_adverted_faces(part), part)
 
@@ -155,7 +157,7 @@ class Projector:
         Note: Feature ColorTable is not implemented yet
 
         Parameters:
-            part ( PartRepresentation ): part containing meshes to calculate the calor for
+            part ( PartRepresentation ): part containing meshes to calculate the color for
             lights ( list[ LightSource ] ): list of light sources
             color_table ( Optional[ ColorTable ] = None ): colortable for calculating the color depending on mesh values
         

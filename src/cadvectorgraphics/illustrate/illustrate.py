@@ -1,48 +1,45 @@
 from ..render.render import VirtualRenderer
 from ..render.components.geometry import PlanarEdgesCollection, PlanarFacet, EdgeRepresentationType
 from numpy import ndarray
-from ..illustrate.components.style import LineStyle, FaceStyle, CoordSystemStyle, ArrowStyle
-from numpy import array, any, isnan, stack, transpose, zeros
-from numpy.linalg import norm
-from ..util.geometry import normalize
-from ..util.color import RGBA
-from ..illustrate.components.svg import SVGElement, SVGHelper, CreatefontClass
+from ..illustrate.components.style import LineStyle, FaceStyle, CoordSystemStyle
+from numpy import array, any, isnan
+from ..illustrate.components.svg import SVGElement, SVGHelper
 
 
 class Image:
     def __init__(self, renderer: VirtualRenderer) -> None:
         self._renderer: VirtualRenderer = renderer
-        self._lineStyles: list[LineStyle] = []
-        self._faceStyle: FaceStyle | None = None
-        self._coordStyle: CoordSystemStyle | None = None
+        self._line_styles: list[LineStyle] = []
+        self._facet_style: FaceStyle | None = None
+        self._coord_style: CoordSystemStyle | None = None
         self._margin: tuple[int, int] = (0, 0)
-        self._boundingBox: ndarray = self._renderer.bounding_box()
-        self._size: tuple[int, int] = self._boundingBox[0, 2], self._boundingBox[1, 2]
+        self._bounding_box: ndarray = self._renderer.bounding_box
+        self._size: tuple[int, int] = int(self._bounding_box[0, 2]), int(self._bounding_box[1, 2])
         self._zoom: tuple[float, float] = (1., 1.)
         self._scale: tuple[float, float] = (1, 1)
 
     @property
-    def lineStyle(self) -> list[LineStyle]:
-        return self._lineStyles
+    def line_style(self) -> list[LineStyle]:
+        return self._line_styles
 
     @property
     def size(self) -> tuple[int, int]:
-        dx = int(self._boundingBox[0, 2] * self._zoom[0]) + self._margin[0] * 2
-        dy = int(self._boundingBox[1, 2] * self._zoom[1]) + self._margin[1] * 2
+        dx = int(self._bounding_box[0, 2] * self._zoom[0]) + self._margin[0] * 2
+        dy = int(self._bounding_box[1, 2] * self._zoom[1]) + self._margin[1] * 2
 
-        if self._coordStyle is not None:
-            dx += self._coordStyle.margin * 2
-            dy += self._coordStyle.margin * 2
+        if self._coord_style is not None:
+            dx += self._coord_style.margin * 2
+            dy += self._coord_style.margin * 2
 
-        return dx, dy
+        return int(dx), int(dy)
 
     @property
     def width(self) -> int:
-        return self.size[0] * self._scale[0]
+        return int(self.size[0] * self._scale[0])
 
     @property
     def height(self) -> int:
-        return self.size[1] * self._scale[1]
+        return int(self.size[1] * self._scale[1])
 
     @property
     def margins(self) -> tuple[int, int]:
@@ -70,51 +67,52 @@ class Image:
 
     @property
     def translate(self) -> tuple[int, int]:
-        dx = - self._boundingBox[0, 0]
-        dy = - self._boundingBox[1, 1]
+        dx = - self._bounding_box[0, 0]
+        dy = - self._bounding_box[1, 1]
 
         return dx, dy
 
-    def boundingBox(self) -> ndarray:
-        bb = self._boundingBox
+    def bounding_box(self) -> ndarray:
+        bb = self._bounding_box
         bb[0, :] *= self._zoom[0]
         bb[1, :] *= self._zoom[1]
         return bb
 
-    def addLineStyle(self, linestyle: LineStyle) -> None:
-        self._lineStyles.append(linestyle)
+    def add_line_style(self, line_style: LineStyle) -> None:
+        self._line_styles.append(line_style)
 
-    def setFaceStyle(self, facestyle: FaceStyle) -> None:
-        self._faceStyle = facestyle
+    def set_face_style(self, face_style: FaceStyle) -> None:
+        self._facet_style = face_style
 
-    def setCoordSystemStyle(self, coordSystemStyle: CoordSystemStyle) -> None:
-        self._coordStyle = coordSystemStyle
+    def set_coord_system_style(self, coord_system_style: CoordSystemStyle) -> None:
+        self._coord_style = coord_system_style
 
-    def _writeFacet(self, facet: PlanarFacet) -> SVGElement:
+    def _write_facet(self, facet: PlanarFacet) -> SVGElement:
         width = 0.03
         dash = (1, 0)
-        strokecolor = facet.color
-        if not self._faceStyle is None:
-            width = self._faceStyle.width
-            strokecolor = str(self._faceStyle.color)
-            if not self._faceStyle.dash is None:
-                dash = self._faceStyle.dash
+        stroke_color = facet.color
+        if self._facet_style is not None:
+            width = self._facet_style.width
+            stroke_color = str(self._facet_style.color)
+            if self._facet_style.dash is not None:
+                dash = self._facet_style.dash
 
-        return SVGHelper.Polygon(facet.points, facet.color, strokecolor, width, dash)
+        return SVGHelper.polygon(facet.points, facet.color, stroke_color, width, dash)
 
-    def _writeSurface(self) -> list[str]:
-        surface = SVGHelper.TransformGroup((1, 1), (0, 0))
-        for facet in self._renderer._facets:
-            surface.append(self._writeFacet(facet))
+    def _write_surface(self) -> SVGElement:
+        surface = SVGHelper.transform_group((1, 1), (0, 0))
+        for facet in self._renderer.facets:
+            surface.append(self._write_facet(facet))
         return surface
 
-    def _writeWires(self, edges: PlanarEdgesCollection) -> list[SVGElement]:
+    @staticmethod
+    def _write_wires(edges: PlanarEdgesCollection) -> list[SVGElement]:
         elements = []
-        for edge in edges._wires:
-            elements.append(SVGHelper.Path(edge.points))
+        for edge in edges.edges():
+            elements.append(SVGHelper.path(edge.points))
         return elements
 
-    def _writeWiresCollection(self) -> list[SVGElement]:
+    def _write_wires_collection(self) -> list[SVGElement]:
 
         hierarchy: list = [
             EdgeRepresentationType.HIDDENSMOOTHWIRE,
@@ -128,61 +126,61 @@ class Image:
         for edgeGroup in hierarchy:
 
             edges: PlanarEdgesCollection | None = next(
-                (visibleEdges for visibleEdges in self._renderer._edges if visibleEdges._type == edgeGroup), None)
+                (visibleEdges for visibleEdges in self._renderer.edges if visibleEdges.edges_type == edgeGroup), None)
             if edges is None:
                 continue
 
-            linestyle: LineStyle | None = next((style for style in self._lineStyles if style.type == edgeGroup), None)
-            if linestyle is None:
+            line_style: LineStyle | None = next((style for style in self._line_styles if style.type == edgeGroup), None)
+            if line_style is None:
                 continue
-            if not linestyle.dash is None:
-                group = SVGHelper.StyleGroup(linestyle.color, linestyle.width, linestyle.dash)
+            if line_style.dash is not None:
+                group = SVGHelper.style_group(line_style.color, line_style.width, line_style.dash)
             else:
-                group = SVGHelper.StyleGroup(linestyle.color, linestyle.width)
+                group = SVGHelper.style_group(line_style.color, line_style.width)
 
-            group.extend(self._writeWires(edges))
+            group.extend(self._write_wires(edges))
             groups.append(group)
         return groups
 
-    def _writeCoordinateSystem(self) -> SVGElement | None:
-        if self._coordStyle is None:
+    def _write_coordinate_system(self) -> SVGElement | None:
+        if self._coord_style is None:
             return None
 
-        sizefactor = self._coordStyle.size / 2
-        anchor = array([self._coordStyle.size, self.height - self._coordStyle.size])
-        x = self._renderer._coordinate_system.x * sizefactor
-        y = self._renderer._coordinate_system.y * sizefactor
-        z = self._renderer._coordinate_system.z * sizefactor
+        size_factor = self._coord_style.size / 2
+        anchor = array([self._coord_style.size, self.height - self._coord_style.size])
+        x = self._renderer.system.x * size_factor
+        y = self._renderer.system.y * size_factor
+        z = self._renderer.system.z * size_factor
 
-        group = SVGHelper.TransformGroup((1, 1), (0, 0))
+        group = SVGHelper.transform_group((1, 1), (0, 0))
 
         if not any(isnan(x)):
-            group.append(SVGHelper.Arrow(anchor, anchor + x * array((1, -1)), sizefactor, self._coordStyle.x))
+            group.append(SVGHelper.arrow(anchor, anchor + x * array((1, -1)), size_factor, self._coord_style.x))
 
         if not any(isnan(y)):
-            group.append(SVGHelper.Arrow(anchor, anchor + y * array((1, -1)), sizefactor, self._coordStyle.y))
+            group.append(SVGHelper.arrow(anchor, anchor + y * array((1, -1)), size_factor, self._coord_style.y))
 
         if not any(isnan(z)):
-            group.append(SVGHelper.Arrow(anchor, anchor + z * array((1, -1)), sizefactor, self._coordStyle.z))
+            group.append(SVGHelper.arrow(anchor, anchor + z * array((1, -1)), size_factor, self._coord_style.z))
 
         return group
 
     def _write(self) -> str:
-        svg = SVGHelper.SVG(self.width, self.height)
-        coordGroup = SVGHelper.TransformGroup(self.scale, (0, 0))
-        coordSysMargin = self._coordStyle.margin if not self._coordStyle is None else 0
-        marginGroup = SVGHelper.TransformGroup((1, 1), (coordSysMargin, coordSysMargin))
-        boundingBoxGroup = SVGHelper.TransformGroup((self._zoom[0], self._zoom[1]),
-                                                    (self.margins[0] / self._zoom[0], self.margins[1] / self._zoom[1]))
-        geomGroup = SVGHelper.TransformGroup((1, - 1), self.translate)
-        geomGroup.append(self._writeSurface())
-        geomGroup.extend(self._writeWiresCollection())
-        boundingBoxGroup.append(geomGroup)
-        marginGroup.append(boundingBoxGroup)
-        coordGroup.append(marginGroup)
+        svg = SVGHelper.svg(self.width, self.height)
+        coord_group = SVGHelper.transform_group(self.scale, (0, 0))
+        coord_sys_margin = self._coord_style.margin if self._coord_style is not None else 0
+        margin_group = SVGHelper.transform_group((1, 1), (coord_sys_margin, coord_sys_margin))
+        bounding_box_group = SVGHelper.transform_group((self._zoom[0], self._zoom[1]),
+                                                       (self.margins[0] / self._zoom[0], self.margins[1] / self._zoom[1]))
+        geom_group = SVGHelper.transform_group((1, - 1), self.translate)
+        geom_group.append(self._write_surface())
+        geom_group.extend(self._write_wires_collection())
+        bounding_box_group.append(geom_group)
+        margin_group.append(bounding_box_group)
+        coord_group.append(margin_group)
 
-        coordGroup.append(self._writeCoordinateSystem())
-        svg.append(coordGroup)
+        coord_group.append(self._write_coordinate_system())
+        svg.append(coord_group)
         return str(svg)
 
     def write(self, directory: str | None = None) -> None:

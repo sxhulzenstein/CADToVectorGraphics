@@ -41,7 +41,7 @@ class VirtualScene:
         Returns:
             Camera: the camera of this scene
         """
-        if not self._camera is None:
+        if self._camera is not None:
             return self._camera
         raise Exception("Camers is not defined.")
 

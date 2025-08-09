@@ -1,6 +1,5 @@
 from cadquery import Workplane as CADModelBase
-from cadquery import importers, Compound
-from pathlib import Path
+from cadquery import importers
 from uuid import uuid4
 from ....util.file import FilePathInfo, File
 
@@ -11,8 +10,10 @@ class CADModel:
         Creating an instance of an internal CADModel geometry.
 
         Parameters:
-            data ( CADModelBase | str ): CADQuery Workplane containing Solids or filepath to CAD-file
-            name ( str | None = None ): name of the CAD-Object. If name is None, a uuid is generated automatically or is extracted from the filepath
+            data ( CADModelBase | str ): CADQuery work plane containing Solids or filepath to CAD-file
+            name ( str | None = None ):
+                name of the CAD-Object. If name is None, a uuid is generated automatically or is extracted
+                from the filepath
 
         """
         self._base: CADModelBase = data
@@ -28,10 +29,10 @@ class CADModel:
     @property
     def base(self) -> CADModelBase:
         """
-        Get the CADQuery Workplane of the CAD-Object
+        Get the CADQuery work plane of the CAD-Object
 
         Returns:
-            CADModelBase: a CADQuery Workplane
+            CADModelBase: a CADQuery work plane
         """
         return self._base
 
