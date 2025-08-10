@@ -1,3 +1,4 @@
+import logging
 from enum import Enum
 from numpy import ndarray, array, transpose, stack
 from numpy.linalg import norm
@@ -15,6 +16,9 @@ class SVGElementType(Enum):
     TEXT = 6
     STYLE = 7
     ANY = 8
+    DEVS = 9
+    LINEAR_GRADIENT = 10
+    STOP = 11
 
 
 class SVGElement:
@@ -31,6 +35,9 @@ class SVGElement:
         self._substitude_entry_by_key("strokelinecap", "stroke-linecap")
         self._substitude_entry_by_key("styleclass", "class")
         self._substitude_entry_by_key("strokedasharray", "stroke-dasharray")
+        self._substitude_entry_by_key("stopcolor", "stop-color")
+        self._substitude_entry_by_key("stopopacity", "stop-opacity")
+
 
     def __init__(self, element_type: SVGElementType, **kwargs) -> None:
         self._type: SVGElementType = element_type
@@ -41,6 +48,10 @@ class SVGElement:
     def append(self, contents) -> None:
         if contents is None:
             return
+        if type(contents) is list:
+            logging.warning("Contents is a list. Using extend instead of append.")
+            self._contents.extend(contents)
+
         self._contents.append(contents)
 
     def extend(self, contents: list):
@@ -100,6 +111,24 @@ class SVGElement:
             output_list.append(str(self._args["content"]) + "\n")
             return
 
+        if self._type == SVGElementType.DEVS:
+            output_list.append("<defs>\n")
+            for content in self._contents:
+                content.write(output_list)
+            output_list.append("</defs>\n")
+            return
+
+        if self._type == SVGElementType.LINEAR_GRADIENT:
+            output_list.append(f"<linearGradient {arg_str}>\n")
+            for content in self._contents:
+                content.write(output_list)
+            output_list.append("</linearGradient>\n")
+            return
+
+        if self._type == SVGElementType.STOP:
+            output_list.append(f"<stop {arg_str}/>\n")
+            return
+
     def __str__(self) -> str:
         output: list[str] = []
         self.write(output)
@@ -123,17 +152,24 @@ class SVGHelper:
                           transform=f"scale({scale[0]}, {scale[1]}) translate({translate[0]},{translate[1]})")
 
     @staticmethod
+    def devs() -> SVGElement:
+        return SVGElement(SVGElementType.DEVS)
+
+    @staticmethod
     def svg(width: float, height: float) -> SVGElement:
         return SVGElement(SVGElementType.SVG, xmlns="http://www.w3.org/2000/svg", width=f"{width}", height=f"{height}")
 
     @staticmethod
-    def polygon(points: ndarray, fill: RGBA, stroke: RGBA, width: float, dash: tuple[int, ...] = (1, 0)) -> SVGElement:
+    def polygon(points: ndarray, fill: RGBA | str, stroke: RGBA, width: float, dash: tuple[int, ...] = (1, 0)) -> SVGElement:
         x, y = list(points[0, :]), list(points[1, :])
         outline = ' '.join(f"{xi},{yi}" for xi, yi in zip(x, y))
         dasharray = ', '.join(str(v) for v in dash)
+
+        fill_color: str = fill if type(fill) is str else f"{fill.to_hex()}"
+
         return SVGElement(SVGElementType.POLYGON, points=outline, strokewidth=width, strokeopacity=stroke.opacity,
-                          fillopacity=fill.opacity, strokelinejoin="round", fill=f"{fill.to_hex()}",
-                          stroke=f"{fill.to_hex()}",
+                          strokelinejoin="round", fill=fill_color,
+                          fillopacity=1.0, stroke=f"{stroke.to_hex()}",
                           strokedasharray=dasharray)
 
     @staticmethod
@@ -187,6 +223,19 @@ class SVGHelper:
 
             group.append(text)
         return group
+
+    @staticmethod
+    def gradient(gradient_id: str, angle: float, color: RGBA) -> SVGElement:
+        grad = SVGElement(SVGElementType.LINEAR_GRADIENT, id=gradient_id, x1="0%", y1="0%", x2="100%",
+                          y2="100%", gradientTransform=f"rotate({angle}, 0.5, 0.5)")
+        grad.append(SVGHelper.gradient_stop(0, color, 1.0))
+        grad.append(SVGHelper.gradient_stop(100, RGBA(*color.rgb(), 0), 0.0))
+        return grad
+
+    @staticmethod
+    def gradient_stop(offset: float, stop_color: RGBA, stop_opacity: float) -> SVGElement:
+        return SVGElement(SVGElementType.STOP, offset=f"{offset}%", stopcolor=stop_color.to_hex(),
+                          stopopacity=stop_opacity)
 
 
 def create_font_class(name: str, size: float, fill: RGBA, size_unit: str = "pt", style: str = "italic",

@@ -89,22 +89,27 @@ class Image:
     def set_coord_system_style(self, coord_system_style: CoordSystemStyle) -> None:
         self._coord_style = coord_system_style
 
-    def _write_facet(self, facet: PlanarFacet) -> SVGElement:
+    def _write_facet(self, facet: PlanarFacet) -> list[SVGElement]:
         width = 0.03
         dash = (1, 0)
-        stroke_color = facet.color
+        stroke_color = facet.face_color
         if self._facet_style is not None:
             width = self._facet_style.width
             stroke_color = str(self._facet_style.color)
             if self._facet_style.dash is not None:
                 dash = self._facet_style.dash
 
-        return SVGHelper.polygon(facet.points, facet.color, stroke_color, width, dash)
+        polys = [SVGHelper.polygon(facet.points, facet.face_color, stroke_color, width, dash)]
+        #polys = []
+        if facet.gradient_uuids:
+            polys.extend([SVGHelper.polygon(facet.points, f"url(#{uid})", stroke_color, width, dash)
+                          for uid in facet.gradient_uuids ])
+        return polys
 
     def _write_surface(self) -> SVGElement:
         surface = SVGHelper.transform_group((1, 1), (0, 0))
         for facet in self._renderer.facets:
-            surface.append(self._write_facet(facet))
+            surface.extend(self._write_facet(facet))
         return surface
 
     """
@@ -203,6 +208,20 @@ class Image:
 
         return group
 
+    @staticmethod
+    def _write_facet_gradients(facet: PlanarFacet) -> list[SVGElement] | None:
+        if not facet.node_color:
+            return
+        return [SVGHelper.gradient(facet.gradient_uuids[i], facet.gradient_angles[i], facet.node_color[i])
+                for i in range(len(facet.node_color))]
+
+    def _write_gradients(self) -> SVGElement:
+        devs = SVGHelper.devs()
+        for facet in self._renderer.facets:
+            if grads := self._write_facet_gradients(facet):
+                devs.extend(grads)
+        return devs
+
     def _write(self) -> str:
         svg = SVGHelper.svg(self.width, self.height)
         coord_group = SVGHelper.transform_group(self.scale, (0, 0))
@@ -217,8 +236,10 @@ class Image:
         bounding_box_group.append(geom_group)
         margin_group.append(bounding_box_group)
         coord_group.append(margin_group)
-
         coord_group.append(self._write_coordinate_system())
+
+        devs = self._write_gradients()
+        svg.append(devs)
         svg.append(coord_group)
         return str(svg)
 
