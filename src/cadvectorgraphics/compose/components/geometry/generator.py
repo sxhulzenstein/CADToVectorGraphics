@@ -1,8 +1,8 @@
 from .cad import CADModel
-from cadquery import Solid, exporters
+from cadquery import Solid, exporters, Face
 import gmsh
 import tempfile
-from numpy import ndarray, array, transpose
+from numpy import ndarray, array, transpose, hstack
 from meshio import read, Mesh as MeshIOMesh
 from uuid import uuid4
 import os
@@ -42,7 +42,8 @@ class GmshGenerator:
                 mesh_info.get_cells_type("quad"))
 
     @staticmethod
-    def _generate(model: CADModel | Solid, options: GmshGeneratorOptions) -> tuple[ndarray, ndarray, ndarray]:
+    def _generate(model: CADModel | Solid | Face, options: GmshGeneratorOptions) -> tuple[ndarray, ndarray, ndarray]:
+        gmsh.clear()
         with tempfile.NamedTemporaryFile(suffix=".step", delete=False) as file:
             file.close()
 
@@ -75,10 +76,27 @@ class GmshGenerator:
         return geometry, transpose(triangles), transpose(quadrilaterals)
 
     @staticmethod
+    def _generate_by_surfaces(model: CADModel | Solid, options: GmshGeneratorOptions):
+        faces: list[Face] = model.base.faces().vals() if type(model) is CADModel else model.Faces()
+        geometries = []
+        triangles = []
+        quadrilaterals = []
+
+        index_shift = 0
+        for face in faces:
+            g, t, q = GmshGenerator._generate(face, options)
+            geometries.append(g)
+            triangles.append(t + index_shift)
+            quadrilaterals.append(q + index_shift)
+            index_shift += g.shape[1]
+
+        return hstack(geometries), hstack(triangles), hstack(quadrilaterals)
+
+    @staticmethod
     def generate(model: CADModel | Solid, options: GmshGeneratorOptions) -> tuple[ndarray, ndarray, ndarray]:
-        gmsh.initialize()
         try:
-            return GmshGenerator._generate(model, options)
+            gmsh.initialize()
+            return GmshGenerator._generate_by_surfaces(model, options)
         except Exception as e:
             logging.warning(f"Using the default mesh generator because gmsh threw the following error: \n {str(e)}")
             return DefaultGenerator.generate(model, DefaultGeneratorOptions())

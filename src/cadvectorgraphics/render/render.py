@@ -34,16 +34,22 @@ class VirtualRenderer:
         """
         return self._scene
 
-    def render(self, color_table: ColorTable | None = None) -> None:
+    def render(self, use_nodes: bool = False, color_table: ColorTable | None = None) -> None:
         """
         Render the part using the camera, the part itself and its surrounding lights
 
         Parameters:
+            use_nodes: Interpolate colors over face
             color_table ( Optional[ ColorTable ] = None ): color table ( not implemented yet )
         """
         self._facets = self._projector.project_facets(self._scene.part)
         self._facets.sorted = self._projector.determine_visible_faces(self._scene.part)
-        self._facets.colors = self._projector.determine_face_colors(self._scene.part, self._scene.lights, color_table)
+        self._facets.face_colors = self._projector.determine_face_colors(
+            self._scene.part, self._scene.lights, color_table)
+        if use_nodes:
+            self._facets.node_colors = self._projector.determine_node_colors(
+                self._scene.part, self._scene.lights, color_table)
+
         self._edges = self._projector.project_curves_and_edges(self._scene.part)
         self._coordinate_system = self._projector.get_coordinate_system()
 

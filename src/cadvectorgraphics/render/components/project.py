@@ -6,6 +6,7 @@ from ...compose.components.illuminate import LightSource
 from ...render.components.geometry import PlanarMeshRepresentation, PlanarEdgesCollection, EdgeRepresentationType, \
     PlanarCoordinateSystemRepresentation
 from ...util.geometry import columnwise_normalize
+from ...util.color import RGBA
 from OCP.HLRAlgo import HLRAlgo_Projector
 from OCP.gp import gp_Dir as OCPDirection, gp_Ax2 as OCPAxis, gp_Pnt as OCPSpacialPoint, gp_Pnt2d as OCPPlanarPoint
 from numpy import transpose, hstack, array, argwhere, argsort, tile, zeros, where, round, sum, ones, ndarray, ndarray
@@ -36,7 +37,7 @@ class Projector:
 
         for solid_index, solid in enumerate(part.solids):
             ids: ndarray = array(list(solid.mesh.topology.base.keys()))
-            prod: ndarray = transpose(self._camera.view) @ solid.mesh.normals[:, ids]
+            prod: ndarray = transpose(self._camera.view) @ solid.mesh.face_normals[:, ids]
             visible_facets[solid_index] = ids[argwhere(prod >= 0).flatten()].flatten()
         return visible_facets
 
@@ -78,27 +79,20 @@ class Projector:
             CurveBuilder(edgesForType)
             edges.append(PlanarEdgesCollection(Shape(edgesForType).Edges(), edgeType))
 
-    def _determine_face_colors(self,
-                               solid: SolidRepresentation,
-                               lights: list[LightSource],
-                               color_table: ColorTable | None = None) -> ndarray:
-
-        mesh = solid.mesh
-        ka = solid.material.ka
-        kd = solid.material.kd
-        ks = solid.material.ks
-        alpha = solid.material.alpha
-
-        normals = mesh.normals
-        centers = mesh.centers
-
+    def _determine_colors(self,
+                          anchors: ndarray,
+                          normals: ndarray,
+                          material,
+                          lights: list[LightSource],
+                          base_color: RGBA,
+                          color_table: ColorTable | None = None) -> ndarray:
         n_normals: int = normals.shape[1]
         n_sources: int = len(lights)
 
         view_direction: ndarray = - tile(self._camera.view, (1, n_normals))
 
         if color_table is None:
-            ambient: ndarray = transpose(tile(array(solid.color.rgb()), (n_normals, 1)))
+            ambient: ndarray = transpose(tile(array(base_color.rgb()), (n_normals, 1)))
         else:
             raise NotImplementedError()
 
@@ -106,12 +100,12 @@ class Projector:
             return ambient
 
         colors = zeros((4, n_normals))
-        colors[3, :] = ones((1, n_normals)) * solid.color.alpha
+        colors[3, :] = ones((1, n_normals)) * base_color.alpha
 
         for source in lights:
             diffuse = transpose(tile(array(source.color.rgb()), (n_normals, 1)))
             specular = transpose(tile(array(source.color.rgb()), (n_normals, 1)))
-            light_source_directions = columnwise_normalize(tile(source.position, (1, n_normals)) - centers)
+            light_source_directions = columnwise_normalize(tile(source.position, (1, n_normals)) - anchors)
             light_source_directions_cos = tile(sum(light_source_directions * normals, axis=0), (3, 1))
 
             # ensure that all cosine values of the diffuse part are positive
@@ -123,16 +117,30 @@ class Projector:
             # ensure that all cosine values of the specular part are positive
             reflection_directions_cos = where(reflection_directions_cos < 0., 0., reflection_directions_cos)
 
-            colors[0: 3, :] += (1. / n_sources) * ambient * ka
+            colors[0: 3, :] += (1. / n_sources) * ambient * material.ka
 
-            diffuse_term = kd * light_source_directions_cos * diffuse
+            diffuse_term = material.kd * light_source_directions_cos * diffuse
             colors[0:3, :] += diffuse_term
 
-            specular_term = ks * tile(reflection_directions_cos ** alpha, (3, 1)) * specular
+            specular_term = material.ks * tile(reflection_directions_cos ** material.alpha, (3, 1)) * specular
             specular_term = where(diffuse_term < 0, 0, specular_term)
             colors[0: 3, :] += specular_term
 
         return round(where(colors > 255, 255, colors))
+
+    def _determine_face_colors(self,
+                               solid: SolidRepresentation,
+                               lights: list[LightSource],
+                               color_table: ColorTable | None = None) -> ndarray:
+        return self._determine_colors(solid.mesh.centers, solid.mesh.face_normals, solid.material,
+                                      lights, solid.color, color_table)
+
+    def _determine_node_colors(self,
+                               solid: SolidRepresentation,
+                               lights: list[LightSource],
+                               color_table: ColorTable | None = None) -> ndarray:
+        return self._determine_colors(solid.mesh.geometry.base, solid.mesh.nodal_normals, solid.material,
+                                      lights, solid.color, color_table)
 
     def determine_visible_faces(self, part: PartRepresentation) -> ndarray:
         """
@@ -165,10 +173,13 @@ class Projector:
             list[ ndarray ]: list of numpy arrays with size ( 4 x N ) for each solid
         
         """
-        colors: list[ndarray] = []
-        for solid in part:
-            colors.append(self._determine_face_colors(solid, lights, color_table))
-        return colors
+        return [self._determine_face_colors(solid, lights, color_table) for solid in part]
+
+    def determine_node_colors(self,
+                              part: PartRepresentation,
+                              lights: list[LightSource],
+                              color_table: ColorTable | None = None) -> list[ndarray]:
+        return [self._determine_node_colors(solid, lights, color_table) for solid in part]
 
     def project_facets(self, part: PartRepresentation) -> PlanarMeshRepresentation:
         """

@@ -1,5 +1,5 @@
 from cadquery import Vector as VectorBase
-from numpy import array, zeros, cross, ndarray, transpose
+from numpy import array, zeros, cross, ndarray, transpose, tile
 from ....util.geometry import columnwise_normalize
 from .cad import CADModel
 from cadquery.occ_impl.shapes import Solid
@@ -7,6 +7,8 @@ from meshio import read
 from .geometry import Geometry
 from .topology import Topology
 from .generator import MeshModelGenerator
+from functools import cached_property
+from numpy.linalg import norm
 
 
 class Mesh:
@@ -25,7 +27,8 @@ class Mesh:
         self._geometry: Geometry = Geometry(geometry)
         self._topology: Topology = Topology(triangles, quadrilaterals)
         self._centers: ndarray = self._calculate_centers()
-        self._normals: ndarray = self._normals()
+        self._face_normals: ndarray = self._surface_normals
+        self._vertex_normals: ndarray = self._nodal_normals
 
     @classmethod
     def from_file(cls, file_path: str) -> "Mesh":
@@ -109,33 +112,54 @@ class Mesh:
 
         return columnwise_normalize(cross(v1 - v0, v2 - v1, axis=0))
 
-    def _normals(self) -> ndarray:
-        normals: ndarray = zeros((3, self.n_faces))
+    @cached_property
+    def _weighted_surface_normals(self) -> ndarray:
+        normals: ndarray = zeros((4, self.n_faces))
         triangle_ids: ndarray = array(list(self.topology.triangles.keys()))
 
         if not len(triangle_ids) == 0:
             triangles: ndarray = array(list(self.topology.triangles.values())).transpose()
             normals_of_triangles: ndarray = self._triangle_normals(triangles)
-            normals[:, triangle_ids] += normals_of_triangles
+            normals[0:3, triangle_ids] += normals_of_triangles
 
         quadrilateral_ids: ndarray = array(list(self.topology.quadrilaterals.keys()))
         if not len(quadrilateral_ids) == 0:
             quadrilaterals: ndarray = array(list(self.topology.quadrilaterals.values())).transpose()
             normals_of_quadrilaterals: ndarray = (self._triangle_normals(quadrilaterals[array([0, 1, 2]), :])
                                                   + self._triangle_normals(quadrilaterals[array([0, 2, 3]), :]))
-            normals[:, quadrilateral_ids] += normals_of_quadrilaterals
+            normals[0:3, quadrilateral_ids] += normals_of_quadrilaterals
 
-        return columnwise_normalize(normals)
+        normals[3, :] = norm(normals[0:3, :], axis=0)
+
+        return normals
+
+    @cached_property
+    def _surface_normals(self) -> ndarray:
+        n = self._weighted_surface_normals
+        return columnwise_normalize(n[0:3, :])
+
+    @cached_property
+    def _nodal_normals(self) -> ndarray:
+        normals: ndarray = zeros((4, self.n_nodes))
+        for face_index, face_node_indices in self.topology.base.items():
+            normals[:, face_node_indices] += transpose(tile(
+                self._weighted_surface_normals[:, face_index], (len(face_node_indices), 1)))
+
+        return columnwise_normalize(normals[0:3, :])
 
     @property
-    def normals(self) -> ndarray:
+    def face_normals(self) -> ndarray:
         """
         Get the normals of each face
 
         Returns:
             ndarray: Normals of the mesh as ( 3 x N ) array
         """
-        return self._normals
+        return self._face_normals
+
+    @property
+    def nodal_normals(self) -> ndarray:
+        return self._vertex_normals
 
     @property
     def centers(self) -> ndarray:
