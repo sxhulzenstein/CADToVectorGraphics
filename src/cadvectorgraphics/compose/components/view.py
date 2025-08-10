@@ -1,19 +1,25 @@
 from ...util.geometry import normalize
-from numpy import ndarray, zeros, array, reshape
+from numpy import ndarray, zeros, array, reshape,cross
 
 
 class Camera:
-    def __init__(self, view: tuple[float, float, float] | list[float] | ndarray) -> None:
+    def __init__(self, view: tuple[float, float, float] | list[float] | ndarray,
+                 horizontal_direction: tuple[float, float, float] | ndarray | None = None) -> None:
         """
         Create a camera as view port for a virtual scene
 
         Parameters:
             view ( tuple[ float, float, float ] | list[ float ] | ndarray ): view direction
         """
-        horizontal_direction: tuple[float, float, float] = (0., 0., 0.)
         self._position: ndarray = zeros((3, 1))
         self._view: ndarray = reshape(normalize(array(view)), (3, 1))
-        self._horizontal: ndarray = reshape(normalize(array(horizontal_direction)), (3, 1))
+        self._horizontal: ndarray | None = None
+        self._vertical: ndarray | None = None
+
+        if horizontal_direction:
+            self._horizontal = reshape(normalize(array(horizontal_direction)), (3, 1))
+            self._vertical = reshape(normalize(cross(self._horizontal.flatten(), self._view.flatten())), (3, 1))
+
 
     @property
     def position(self) -> ndarray:
@@ -36,3 +42,11 @@ class Camera:
 
         """
         return self._view
+
+    @property
+    def horizontal(self) -> ndarray | None:
+        return self._horizontal
+
+    @property
+    def vertical(self) -> ndarray | None:
+        return self._vertical

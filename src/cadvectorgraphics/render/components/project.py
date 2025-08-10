@@ -29,8 +29,15 @@ class Projector:
             camera ( Camera ): camer for which a projector shall be created
         """
         self._camera: Camera = camera
-        self._base = HLRAlgo_Projector(
-            OCPAxis(OCPSpacialPoint(*self._camera.position), OCPDirection(*self._camera.view)))
+
+        if self._camera.horizontal is not None:
+            view = OCPAxis(OCPSpacialPoint(*self._camera.position),
+                           OCPDirection(*self._camera.view),
+                           OCPDirection(*self._camera.horizontal))
+            self._base = HLRAlgo_Projector(view)
+        else:
+            self._base = HLRAlgo_Projector(
+                OCPAxis(OCPSpacialPoint(*self._camera.position), OCPDirection(*self._camera.view)))
 
     def _remove_adverted_faces(self, part: PartRepresentation) -> dict[int, ndarray]:
         visible_facets: dict[int, ndarray] = {}
