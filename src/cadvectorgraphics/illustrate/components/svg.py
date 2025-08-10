@@ -139,8 +139,11 @@ class SVGHelper:
     @staticmethod
     def path(points: ndarray, stroke_color: RGBA, stroke_width: float, dash: tuple[float, ...] = (1, 0)) -> SVGElement:
         x, y = list(points[0, :]), list(points[1, :])
-        path = [f"M{x[0]},{y[0]}"]
-        path.extend([f"L{xi},{yi}" for xi, yi in zip(x[1:], y[1:])])
+        if len(x) == 0 or len(y) == 0:
+            path = []
+        else:
+            path = [f"M{x[0]},{y[0]}"]
+            path.extend([f"L{xi},{yi}" for xi, yi in zip(x[1:], y[1:])])
         dasharray = ', '.join(str(v) for v in dash)
         return SVGElement(SVGElementType.PATH, d=' '.join(path), stroke=f"{stroke_color.to_hex()}", strokewidth=stroke_width,
                           strokeopacity=stroke_color.opacity, strokelinejoin="round",

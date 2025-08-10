@@ -24,14 +24,15 @@ class VirtualScene:
         """
         self._lights.append(light)
 
-    def set_camera_position(self, position: tuple[float, float, float]) -> None:
+    def set_camera_position(self, position: tuple[float, float, float],
+                            horizontal: tuple[float, float, float] | None = None) -> None:
         """
         Create and set a new camera
 
         Parameters:
             position ( tuple[ float, float, float ] ): position for the new camera
         """
-        self._camera = Camera(position)
+        self._camera = Camera(position, horizontal)
 
     @property
     def camera(self) -> Camera:
